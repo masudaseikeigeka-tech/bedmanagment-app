@@ -218,6 +218,7 @@
   .badge.delay{background:var(--delay);}
   .badge.privatewish{background:#6b7280;}
   .badge.obswarn{background:#ea580c;}
+  .badge.info{background:#64748b;}
   .badge.gender-m{background:#3b82f6;}
   .badge.gender-f{background:#ec4899;}
 
@@ -342,10 +343,148 @@
   }
   .legend-item{display:flex;align-items:center;gap:5px;}
   .legend-dot{width:10px;height:10px;border-radius:3px;}
+
+  /* ---------- ログイン/役割選択画面 (spec.md 4.1) ---------- */
+  .login-screen{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    background:var(--bg);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:28px;
+    padding:24px;
+    max-width:1280px;
+    margin:0 auto;
+  }
+  .login-title{font-size:19px;font-weight:900;color:var(--ink);text-align:center;}
+  .login-sub{font-size:13px;color:var(--sub);text-align:center;margin-top:2px;}
+  .login-instruction{font-size:14px;font-weight:800;color:var(--sub);text-align:center;}
+  .login-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+    width:100%;
+    max-width:640px;
+  }
+  .login-user-btn{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    padding:22px 12px;
+    border-radius:18px;
+    border:2px solid var(--line);
+    background:#fff;
+    cursor:pointer;
+  }
+  .login-user-btn:active{transform:scale(.97);}
+  .login-avatar-circle{
+    width:60px;height:60px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;font-weight:900;color:#fff;
+  }
+  .role-head_nurse{background:var(--blue);}
+  .role-leader_nurse{background:#0891b2;}
+  .role-doctor{background:#7c3aed;}
+  .login-user-name{font-size:15px;font-weight:800;color:var(--ink);}
+  .login-user-role{font-size:11.5px;color:var(--sub);}
+
+  .login-pin{display:flex;flex-direction:column;align-items:center;gap:18px;width:100%;}
+  .login-back{align-self:flex-start;border:none;background:none;color:var(--sub);font-size:13px;font-weight:800;cursor:pointer;}
+  .login-avatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;}
+  .login-pin-label{text-align:center;}
+  .login-pin-label .name{font-size:15px;font-weight:800;}
+  .login-pin-label .hint{font-size:12px;color:var(--sub);margin-top:2px;}
+  .pin-dots{display:flex;gap:12px;}
+  .pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);background:transparent;}
+  .pin-dot.filled{border-color:var(--blue);background:var(--blue);}
+  .pin-dot.error{border-color:var(--delay);background:var(--delay);}
+  .pin-dots.shake{animation:pin-shake .4s;}
+  @keyframes pin-shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-8px);}
+    40%{transform:translateX(8px);}
+    60%{transform:translateX(-6px);}
+    80%{transform:translateX(6px);}
+  }
+  .login-fail-msg{max-width:280px;background:#fff7e6;color:#b45309;font-size:12px;font-weight:800;text-align:center;padding:10px 14px;border-radius:10px;}
+  .pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  .pin-key{
+    width:60px;height:60px;border-radius:16px;
+    border:1px solid var(--line);background:#fff;
+    font-size:20px;font-weight:800;cursor:pointer;
+  }
+  .pin-key.sub{font-size:11px;font-weight:800;color:var(--sub);}
+  .login-demo-note{font-size:10.5px;color:#c4c9d1;}
+
+  /* ---------- 共有iPad用ヘッダー(ログイン中の職員表示・切替) ---------- */
+  .app-header{
+    display:flex;align-items:center;justify-content:space-between;
+    background:#fff;border-bottom:1px solid var(--line);
+    padding:6px 14px;font-size:11.5px;color:var(--sub);
+  }
+  .logout-btn{border:none;background:none;color:var(--sub);font-weight:800;font-size:11.5px;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;}
+
+  /* ---------- 入院予定/退院予定/手術予定 一覧画面 ---------- */
+  .list-view{display:flex;flex-direction:column;gap:10px;}
+  .list-card{
+    background:var(--card-bg);
+    border:2px solid var(--line);
+    border-radius:14px;
+    padding:12px 14px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .list-card .gender-tag{position:static;flex-shrink:0;}
+  .list-card-body{flex:1;min-width:0;}
+  .list-card-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+  .list-card-name{font-size:15px;font-weight:800;}
+  .list-card-room{font-size:12px;color:var(--sub);font-weight:700;}
+  .list-card-meta{font-size:12px;color:var(--sub);margin-top:2px;}
+  .list-card-reason{font-size:11.5px;color:#b45309;margin-top:3px;}
+  .list-empty{color:var(--sub);font-size:13px;text-align:center;padding:30px 0;}
 </style>
 </head>
 <body>
+
+<!-- ログイン/役割選択画面 (spec.md 4.1)。院内共有iPadという前提のため、
+     アプリを開くたびに必ずここを経由させる(誰が使うかを選んでから中に入る)。 -->
+<div class="login-screen" id="loginScreen">
+  <div id="loginSelectStep">
+    <div style="margin-bottom:26px;">
+      <div class="login-title">増田整形外科</div>
+      <div class="login-sub">病床管理システム</div>
+    </div>
+    <div class="login-instruction" style="margin-bottom:16px;">ご自身の名前をタップしてください</div>
+    <div class="login-grid" id="loginUserGrid"></div>
+  </div>
+
+  <div id="loginPinStep" class="login-pin" style="display:none;">
+    <button class="login-back" id="loginBackBtn">← 職員選択に戻る</button>
+    <div class="login-avatar" id="loginPinAvatar"></div>
+    <div class="login-pin-label">
+      <div class="name" id="loginPinName"></div>
+      <div class="hint" id="loginPinHint">のPINを入力してください</div>
+    </div>
+    <div class="pin-dots" id="pinDots"></div>
+    <div class="login-fail-msg" id="loginFailMsg" style="display:none;">PINが3回一致しませんでした。ご不明な場合は看護師長にご確認ください。</div>
+    <div class="pin-keypad" id="pinKeypad"></div>
+    <!-- 【仮定・デモ用】実運用前に削除: 本番のPINはこの画面に表示してはならない -->
+    <div class="login-demo-note">デモ用PIN: 1234(本番導入時は要削除)</div>
+  </div>
+</div>
+
 <div class="app">
+
+  <!-- 共有iPad用ヘッダー: ログイン中の職員名を表示し、タップで職員選択に戻れる(=別の職員へ切替) -->
+  <div class="app-header">
+    <span>増田整形外科 病床管理</span>
+    <button class="logout-btn" id="logoutBtn">ログイン中: <span id="currentUserName">-</span>(タップで切替)</button>
+  </div>
 
   <!-- サマリーバー -->
   <div class="summary">
@@ -355,7 +494,7 @@
     </div>
     <div class="summary-item">
       <div class="summary-label">本日入院予定</div>
-      <div class="summary-value accent">0</div>
+      <div class="summary-value accent" id="sum-admission-today">0</div>
     </div>
     <div class="summary-item">
       <div class="summary-label">本日退院予定</div>
@@ -363,7 +502,7 @@
     </div>
     <div class="summary-item">
       <div class="summary-label">本日手術予定</div>
-      <div class="summary-value warn">0</div>
+      <div class="summary-value warn" id="sum-surgery-today">0</div>
     </div>
     <button class="emg-btn" id="emgBtn">
       <span class="dot"></span>
@@ -390,18 +529,33 @@
     <span class="legend-item"><span class="legend-dot" style="background:var(--longstay-bg);border:1.5px solid var(--longstay)"></span>長期入院注意</span>
     <span class="legend-item"><span class="legend-dot" style="background:#6b7280"></span>個室希望(2人部屋で空き待ち)</span>
     <!-- 更新確認用: iPadから内容を差し替えたとき、この日付が変わっていれば新しい版が反映されている -->
-    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-08-16c</span></span>
+    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-08-16d</span></span>
   </div>
 
-  <!-- メイン: ベッドマップ(部屋タイプでグルーピングせず、実際のホワイトボードと同じ部屋番号順で1つのグリッドに表示) -->
+  <!-- メイン(タブごとに表示を切り替える) -->
   <div class="main" id="main">
-    <div class="room-section">
+    <!-- 病床一覧: 部屋タイプでグルーピングせず、実際のホワイトボードと同じ部屋番号順で1つのグリッドに表示 -->
+    <div class="room-section" id="view-dashboard">
       <div class="room-section-head">
         <div class="room-section-title">病室(301〜320・実際の並び順)</div>
         <div class="room-section-note">観察室(305〜308)はナースステーション前。平常時は個室として運用し、術後2日目までの患者を優先収容</div>
       </div>
       <div class="bed-grid" id="all-rooms"></div>
     </div>
+
+    <!-- 入院予定一覧 (spec.md 4.4)。
+         このモックには「これから入院してくる予定患者」の別データが無いため、
+         現在入院中の患者を入院日が新しい順に並べた簡易版としている。実データ連携時は
+         入院予定表(scheduled)を別途保持し、今日/明日/今週などで絞り込む形に置き換える想定。 -->
+    <div class="list-view" id="view-admissions" style="display:none;"></div>
+
+    <!-- 退院予定一覧 (spec.md 4.5)。退院予定日順に並べ、遅延・本日退院・長期入院理由を表示する。 -->
+    <div class="list-view" id="view-discharges" style="display:none;"></div>
+
+    <!-- 手術予定連動画面 (spec.md 4.6)。
+         このモックには「これから行う予定手術」の別データが無いため、現在入院中の患者の
+         手術実施日を新しい順に並べた簡易版としている。 -->
+    <div class="list-view" id="view-surgeries" style="display:none;"></div>
   </div>
 
   <!-- 急患判定パネル -->
@@ -434,10 +588,11 @@
    ========================================================= */
 const TODAY = "2026-08-14";
 
-// 「本日入院予定」「本日手術予定」は、現在ホワイトボード上に既に入っている患者とは別に
-// 管理される入院予定表・手術予定表のデータが必要ですが、現時点ではその実データを
-// お預かりしていないため、サマリーバーは仮に0を表示しています【要確認・仮定】。
-// 実データ連携時は入院予定一覧(4.4)・手術予定連動画面(4.6)のデータから自動集計してください。
+// 「本日入院予定」「本日手術予定」は、本来は現在入院中の患者とは別に管理される
+// 入院予定表・手術予定表から集計すべき値だが、そのデータをお預かりしていないため、
+// 現在入院中の患者データ(admissionDateOf・surgeryDate)から本日該当する件数を逆算して
+// 表示している【仮定・簡易版】。実データ連携時は入院予定一覧(4.4)・手術予定連動画面(4.6)の
+// 予定データから自動集計する形に置き換えてください。
 
 // 病名(diagnosis)・入院目的・ADLはホワイトボードから読み取れなかった項目のため、
 // 実在の患者名を使いつつ推測で埋めることは避け、必要な箇所は空欄にしています。
@@ -509,6 +664,54 @@ const beds = [
   {id:"320", room:"320", type:"special", status:"vacant"},
 ];
 
+// ログイン/役割選択 (spec.md 4.1) で使う職員データ。
+// 【仮定・MVP範囲】全職員共通のデモ用PIN「1234」で仮実装している。
+// 職員ごとの個別PIN発行・管理はバックエンド実装後の対応とする。
+const USERS = [
+  { id:"u-head",    name:"看護師長 佐藤",   role:"head_nurse" },
+  { id:"u-leader",  name:"リーダー看護師 木村", role:"leader_nurse" },
+  { id:"u-doctor1", name:"増田 太郎 医師",   role:"doctor" },
+  { id:"u-doctor2", name:"田中 次郎 医師",   role:"doctor" },
+];
+const ROLE_LABEL = { head_nurse:"看護師長", leader_nurse:"リーダー看護師", doctor:"医師" };
+const DEMO_PIN = "1234";
+
+/* =========================================================
+   日付ユーティリティ
+   YYYY-MM-DD文字列同士の簡易計算。タイムゾーンの影響を避けるためUTC基準で計算する。
+   ========================================================= */
+function toDateObj(iso){ return new Date(iso + "T00:00:00Z"); }
+function diffDaysISO(fromISO, toISO){
+  return Math.round((toDateObj(toISO) - toDateObj(fromISO)) / 86400000);
+}
+function addDaysISO(iso, delta){
+  const d = toDateObj(iso);
+  d.setUTCDate(d.getUTCDate() + delta);
+  return d.toISOString().slice(0,10);
+}
+// bed.los("入院X日目")から入院日(YYYY-MM-DD)を逆算する
+function admissionDateOf(b){
+  const m = b.los && b.los.match(/入院(\d+)日目/);
+  if(!m) return null;
+  const days = parseInt(m[1], 10);
+  return addDaysISO(TODAY, -(days - 1));
+}
+// bed.dischargeの先頭10文字がYYYY-MM-DD形式ならその日付を返す。
+// 「未定(...)」「要確認(...)」等の自由記述の場合はnull(=退院予定日が未確定であることを表す)
+function parsedDischargeDate(b){
+  if(!b.discharge) return null;
+  const head = b.discharge.slice(0,10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(head) ? head : null;
+}
+// 部屋の表示ラベル(一覧画面用)。2人部屋はA/Bを丸英字で強調する。
+function roomLabel(b){
+  if(b.type === "general"){
+    const letter = b.id.includes("-") ? b.id.split("-")[1] : "";
+    return `${b.room}号室${CIRCLED_LETTER[letter] || letter}`;
+  }
+  return b.isRecovery ? b.room : `${b.room}号室`;
+}
+
 /* =========================================================
    描画
    ========================================================= */
@@ -574,6 +777,141 @@ function fmt(d){
   return `${parseInt(m)}/${parseInt(day)}`;
 }
 
+/* =========================================================
+   入院予定一覧 (spec.md 4.4)
+   このモックには「これから入院してくる予定患者」の別データが無いため、現在入院中の
+   患者を入院日が新しい順に並べた簡易版としている。実データ連携時は予定入院表を別途
+   保持し、今日/明日/今週などで絞り込む形に置き換える想定。
+   ========================================================= */
+function renderAdmissions(){
+  const container = document.getElementById("view-admissions");
+  const rows = beds
+    .filter(b => b.patient)
+    .map(b => ({ b, p: patients[b.patient], admissionDate: admissionDateOf(b) }))
+    .filter(r => r.admissionDate)
+    .sort((a, b) => b.admissionDate.localeCompare(a.admissionDate)); // 新しい入院が上
+
+  if(rows.length === 0){
+    container.innerHTML = `<div class="list-empty">現在、表示できる入院情報がありません。</div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="room-section-head">
+      <div class="room-section-title">入院予定一覧</div>
+      <div class="room-section-note">現在入院中の患者を入院日が新しい順に表示(予定入院データは未連携のため簡易版)</div>
+    </div>
+  ` + rows.map(({ b, p, admissionDate }) => {
+    const isToday = admissionDate === TODAY;
+    return `
+      <div class="list-card">
+        <div class="gender-tag ${p.gender}">${p.gender === "m" ? "男" : "女"}</div>
+        <div class="list-card-body">
+          <div class="list-card-top">
+            <span class="list-card-name">${p.name}</span>
+            <span class="list-card-room">${roomLabel(b)}</span>
+            ${isToday ? `<span class="badge soon">本日入院</span>` : ""}
+            ${b.emergency ? `<span class="badge delay">急患</span>` : ""}
+          </div>
+          <div class="list-card-meta">入院日 ${fmt(admissionDate)}(${b.los})</div>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+/* =========================================================
+   退院予定一覧 (spec.md 4.5)
+   退院予定日が近い順に並べ、遅延・本日退院・長期入院理由を表示する。
+   ========================================================= */
+function renderDischarges(){
+  const container = document.getElementById("view-discharges");
+  const rows = beds
+    .filter(b => b.patient)
+    .map(b => ({ b, p: patients[b.patient], dischargeDate: parsedDischargeDate(b) }))
+    .sort((a, b) => {
+      if(a.dischargeDate && b.dischargeDate) return a.dischargeDate.localeCompare(b.dischargeDate);
+      if(a.dischargeDate) return -1;
+      if(b.dischargeDate) return 1;
+      return 0;
+    });
+
+  if(rows.length === 0){
+    container.innerHTML = `<div class="list-empty">現在、表示できる退院予定がありません。</div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="room-section-head">
+      <div class="room-section-title">退院予定一覧</div>
+      <div class="room-section-note">退院予定日が近い順に表示。「要確認」は退院予定日が未確定の患者です</div>
+    </div>
+  ` + rows.map(({ b, p, dischargeDate }) => {
+    let statusBadge;
+    if(dischargeDate){
+      const delay = diffDaysISO(TODAY, dischargeDate);
+      if(delay < 0) statusBadge = `<span class="badge delay">退院遅延 ${-delay}日</span>`;
+      else if(delay === 0) statusBadge = `<span class="badge soon">本日退院</span>`;
+      else statusBadge = `<span class="badge info">あと${delay}日</span>`;
+    } else {
+      statusBadge = `<span class="badge longstay">⚠️ 要確認</span>`;
+    }
+    return `
+      <div class="list-card">
+        <div class="gender-tag ${p.gender}">${p.gender === "m" ? "男" : "女"}</div>
+        <div class="list-card-body">
+          <div class="list-card-top">
+            <span class="list-card-name">${p.name}</span>
+            <span class="list-card-room">${roomLabel(b)}</span>
+            ${statusBadge}
+            ${b.longStayFlag || b.status === "longstay" ? `<span class="badge longstay">⚠️ 長期入院</span>` : ""}
+          </div>
+          <div class="list-card-meta">退院予定 ${b.discharge}${b.los ? "／" + b.los : ""}</div>
+          ${b.reason ? `<div class="list-card-reason">${b.reason}</div>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+}
+
+/* =========================================================
+   手術予定連動画面 (spec.md 4.6)
+   このモックには「これから行う予定手術」の別データが無いため、現在入院中の患者の
+   手術実施日を新しい順に並べた簡易版としている。
+   ========================================================= */
+function renderSurgeries(){
+  const container = document.getElementById("view-surgeries");
+  const rows = beds
+    .filter(b => b.patient && b.surgeryType)
+    .map(b => ({ b, p: patients[b.patient] }))
+    .sort((a, b) => b.b.surgeryDate.localeCompare(a.b.surgeryDate)); // 新しい手術が上
+
+  if(rows.length === 0){
+    container.innerHTML = `<div class="list-empty">現在、表示できる手術情報がありません。</div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="room-section-head">
+      <div class="room-section-title">手術予定一覧</div>
+      <div class="room-section-note">現在入院中の患者の手術実施日を新しい順に表示(将来の手術予定データは未連携のため簡易版)</div>
+    </div>
+  ` + rows.map(({ b, p }) => {
+    const daysSince = diffDaysISO(b.surgeryDate, TODAY);
+    const dayLabel = daysSince === 0 ? "本日手術" : daysSince > 0 ? `術後${daysSince}日` : `${-daysSince}日後に予定`;
+    return `
+      <div class="list-card">
+        <div class="gender-tag ${p.gender}">${p.gender === "m" ? "男" : "女"}</div>
+        <div class="list-card-body">
+          <div class="list-card-top">
+            <span class="list-card-name">${p.name}</span>
+            <span class="list-card-room">${roomLabel(b)}</span>
+            <span class="badge obs">${SURGERY_LABEL[b.surgeryType]}</span>
+          </div>
+          <div class="list-card-meta">${fmt(b.surgeryDate)}(${dayLabel})</div>
+        </div>
+      </div>`;
+  }).join("");
+}
+
 function render(){
   // beds配列は既に実際のホワイトボードと同じ部屋番号順(301→…→320)になっているので、
   // 2人部屋を特別にまとめたりせず、1ベッド=1カードとしてそのまま順番にレンダリングする。
@@ -591,8 +929,16 @@ function render(){
 function updateSummary(){
   const vacantCount = beds.filter(b=>b.status==="vacant").length;
   document.getElementById("sum-vacant").textContent = `${vacantCount}/19`;
-  const dischargeToday = beds.filter(b=>b.dischargeLabel==="本日退院").length;
+
+  // 退院・入院・手術の「本日」件数は、現在入院中の患者データから逆算している(要約参照)
+  const dischargeToday = beds.filter(b => parsedDischargeDate(b) === TODAY).length;
   document.getElementById("sum-discharge-today").textContent = dischargeToday;
+
+  const admissionToday = beds.filter(b => admissionDateOf(b) === TODAY).length;
+  document.getElementById("sum-admission-today").textContent = admissionToday;
+
+  const surgeryToday = beds.filter(b => b.surgeryDate === TODAY).length;
+  document.getElementById("sum-surgery-today").textContent = surgeryToday;
 }
 
 /* =========================================================
@@ -699,24 +1045,155 @@ function closeEmergencyPanel(){
 }
 
 /* =========================================================
-   タブバー(モックのため病床一覧以外は未実装トースト)
+   タブバー
+   急患判定は独立画面ではなく、これまで通り右上ボタンと同じ判定パネルを開く。
+   それ以外のタブは対応するビューの表示/非表示を切り替える。
    ========================================================= */
+const VIEW_IDS = {
+  dashboard: "view-dashboard",
+  admissions: "view-admissions",
+  discharges: "view-discharges",
+  surgeries: "view-surgeries",
+};
+
 document.querySelectorAll(".tab").forEach(tab=>{
   tab.addEventListener("click", ()=>{
-    if(tab.dataset.tab === "dashboard"){
-      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-      tab.classList.add("active");
-      return;
-    }
     if(tab.dataset.tab === "emergency"){
       emgBtn.click();
       return;
     }
-    showToast("この画面は次のスプリントで実装予定です(モック範囲外)");
+
+    document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+    tab.classList.add("active");
+
+    Object.values(VIEW_IDS).forEach(id=>{
+      document.getElementById(id).style.display = "none";
+    });
+    document.getElementById(VIEW_IDS[tab.dataset.tab]).style.display = "";
+
+    // フィルタチップ・凡例は病床一覧のみで意味を持つため、他タブでは隠す
+    const isDashboard = tab.dataset.tab === "dashboard";
+    document.getElementById("filters").style.display = isDashboard ? "" : "none";
+    document.querySelector(".legend").style.display = isDashboard ? "" : "none";
   });
 });
 
+/* =========================================================
+   ログイン/役割選択 (spec.md 4.1)
+   院内共有iPadという前提のため、アプリを開くたびに必ずこの画面を経由させる。
+   ========================================================= */
+let currentUser = null;
+let loginSelectedUser = null;
+let pinValue = "";
+let pinFailCount = 0;
+
+const loginScreen = document.getElementById("loginScreen");
+const loginSelectStep = document.getElementById("loginSelectStep");
+const loginPinStep = document.getElementById("loginPinStep");
+const loginUserGrid = document.getElementById("loginUserGrid");
+
+function renderLoginUserGrid(){
+  loginUserGrid.innerHTML = USERS.map(u => `
+    <button class="login-user-btn" data-user="${u.id}">
+      <div class="login-avatar-circle role-${u.role}">${u.name.slice(0,1)}</div>
+      <div class="login-user-name">${u.name}</div>
+      <div class="login-user-role">${ROLE_LABEL[u.role]}</div>
+    </button>
+  `).join("");
+  loginUserGrid.querySelectorAll(".login-user-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>openPinStep(USERS.find(u=>u.id===btn.dataset.user)));
+  });
+}
+
+function openPinStep(user){
+  loginSelectedUser = user;
+  pinValue = "";
+  pinFailCount = 0;
+  document.getElementById("loginFailMsg").style.display = "none";
+  const avatar = document.getElementById("loginPinAvatar");
+  avatar.className = `login-avatar role-${user.role}`;
+  avatar.textContent = user.name.slice(0,1);
+  document.getElementById("loginPinName").textContent = user.name;
+  document.getElementById("loginPinHint").textContent = `${ROLE_LABEL[user.role]}のPINを入力してください`;
+  renderPinDots();
+  loginSelectStep.style.display = "none";
+  loginPinStep.style.display = "flex";
+}
+
+document.getElementById("loginBackBtn").addEventListener("click", ()=>{
+  loginPinStep.style.display = "none";
+  loginSelectStep.style.display = "block";
+});
+
+function renderPinDots(){
+  const dots = document.getElementById("pinDots");
+  dots.innerHTML = "";
+  for(let i=0;i<4;i++){
+    const d = document.createElement("span");
+    d.className = "pin-dot" + (i < pinValue.length ? " filled" : "");
+    dots.appendChild(d);
+  }
+}
+
+const PIN_KEYS = ["1","2","3","4","5","6","7","8","9","clear","0","back"];
+const pinKeypad = document.getElementById("pinKeypad");
+pinKeypad.innerHTML = PIN_KEYS.map(k=>{
+  if(k==="clear") return `<button class="pin-key sub" data-key="clear">クリア</button>`;
+  if(k==="back") return `<button class="pin-key sub" data-key="back">⌫</button>`;
+  return `<button class="pin-key" data-key="${k}">${k}</button>`;
+}).join("");
+pinKeypad.addEventListener("click", (e)=>{
+  const btn = e.target.closest(".pin-key");
+  if(!btn) return;
+  const key = btn.dataset.key;
+  if(key === "clear"){ pinValue = ""; renderPinDots(); return; }
+  if(key === "back"){ pinValue = pinValue.slice(0,-1); renderPinDots(); return; }
+  if(pinValue.length >= 4) return;
+  pinValue += key;
+  renderPinDots();
+  if(pinValue.length === 4){
+    setTimeout(checkPin, 150); // 4桁目のタップが見えるよう少し間を置く
+  }
+});
+
+function checkPin(){
+  if(pinValue === DEMO_PIN){
+    currentUser = loginSelectedUser;
+    document.getElementById("currentUserName").textContent = currentUser.name;
+    loginScreen.style.display = "none";
+    return;
+  }
+  pinFailCount++;
+  const dots = document.getElementById("pinDots");
+  dots.classList.add("shake");
+  dots.querySelectorAll(".pin-dot").forEach(d=>d.classList.add("error","filled"));
+  setTimeout(()=>{
+    dots.classList.remove("shake");
+    pinValue = "";
+    renderPinDots();
+  }, 400);
+  if(pinFailCount >= 3){
+    document.getElementById("loginFailMsg").style.display = "block";
+  }
+}
+
+// ヘッダーの氏名表示をタップすると職員選択に戻る(=別の職員へ切替。院内共有iPad向け)
+document.getElementById("logoutBtn").addEventListener("click", ()=>{
+  currentUser = null;
+  loginSelectedUser = null;
+  pinValue = "";
+  pinFailCount = 0;
+  loginPinStep.style.display = "none";
+  loginSelectStep.style.display = "block";
+  loginScreen.style.display = "flex";
+});
+
+renderLoginUserGrid();
+
 render();
+renderAdmissions();
+renderDischarges();
+renderSurgeries();
 
 /* =========================================================
    Service Worker 登録(オフライン表示とホーム画面アプリ化のため)
