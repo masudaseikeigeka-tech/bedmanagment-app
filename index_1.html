@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<!-- viewport-fit=cover: ホーム画面から起動した全画面表示でノッチ/ホームバーを避けるために必要 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>病床一覧ダッシュボード | 増田整形外科</title>
+
+<!-- ===== ホーム画面アプリ(PWA)としてインストールするための設定 ===== -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<!-- iOS向け: ホーム画面から起動したときSafariのアドレスバーを消して全画面にする -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="病床管理">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+  :root{
+    --bg:#f4f6f8;
+    --card-bg:#ffffff;
+    --ink:#1f2937;
+    --sub:#6b7280;
+    --line:#e5e7eb;
+    --blue:#2563eb;
+    --blue-bg:#eaf1fe;
+    --vacant:#9ca3af;
+    --vacant-bg:#f9fafb;
+    --occupied:#2563eb;
+    --occupied-bg:#eef4ff;
+    --soon:#0891b2;
+    --soon-bg:#e6fbff;
+    --obs:#7c3aed;
+    --obs-bg:#f3ecff;
+    --infect:#dc2626;
+    --infect-bg:#fdecec;
+    --longstay:#d97706;
+    --longstay-bg:#fff7e6;
+    --delay:#b91c1c;
+    --green:#16a34a;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    touch-action:manipulation;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+  .app{
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    max-width:1280px;
+    margin:0 auto;
+    border-left:1px solid var(--line);
+    border-right:1px solid var(--line);
+    background:var(--bg);
+  }
+
+  /* ---------- Summary bar ---------- */
+  .summary{
+    display:flex;
+    align-items:stretch;
+    gap:0;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    padding:10px 16px;
+    position:sticky;
+    top:0;
+    z-index:20;
+  }
+  .summary-item{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:6px 8px;
+    border-right:1px solid var(--line);
+  }
+  .summary-item:last-child{border-right:none;}
+  .summary-label{font-size:12px;color:var(--sub);font-weight:600;}
+  .summary-value{font-size:26px;font-weight:800;line-height:1.3;}
+  .summary-value.accent{color:var(--blue);}
+  .summary-value.warn{color:var(--longstay);}
+  .summary-value.good{color:var(--green);}
+
+  .emg-btn{
+    flex:1.3;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    border:none;
+    cursor:pointer;
+    font-weight:800;
+    font-size:16px;
+    color:#fff;
+    background:var(--green);
+    border-radius:10px;
+    margin-left:8px;
+  }
+  .emg-btn .dot{width:12px;height:12px;border-radius:50%;background:#fff;opacity:.9;}
+  .emg-btn.on{background:#7c3aed;}
+
+  /* ---------- Filter chips ---------- */
+  .filters{
+    display:flex;
+    gap:8px;
+    padding:10px 16px;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    overflow-x:auto;
+    position:sticky;
+    top:78px;
+    z-index:19;
+  }
+  .chip{
+    padding:9px 16px;
+    border-radius:999px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    font-size:14px;
+    font-weight:700;
+    color:var(--sub);
+    white-space:nowrap;
+    cursor:pointer;
+  }
+  .chip.active{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:#fff;
+  }
+
+  /* ---------- Main scroll area ---------- */
+  .main{
+    flex:1;
+    overflow-y:auto;
+    padding:16px;
+    padding-bottom:90px;
+  }
+  .room-section{margin-bottom:22px;}
+  .room-section-head{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .room-section-title{font-size:16px;font-weight:800;}
+  .room-section-note{font-size:12px;color:var(--sub);}
+
+  .bed-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+  }
+
+  /* general 2-bed room card */
+  .room2-card{
+    background:var(--card-bg);
+    border:2px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  /* 部屋番号は行ごとに繰り返さず、部屋の先頭に一度だけ大きく表示する。
+     2床が同じ部屋にまとまっていることを空床時にも一目で分かるようにするための表示。 */
+  .room2-header{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 12px 7px;
+    background:#eef2ff;
+    border-bottom:2px solid var(--line);
+  }
+  .room2-roomno{font-size:15px;font-weight:900;color:var(--ink);}
+  .room2-tag{
+    font-size:11px;
+    font-weight:800;
+    color:#4338ca;
+    background:#e0e7ff;
+    border-radius:999px;
+    padding:2px 9px;
+  }
+  .room2-card .bed-row{
+    padding:10px 12px;
+    display:flex;
+    flex-direction:row;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .room2-card .bed-row + .bed-row{border-top:1px dashed var(--line);}
+  /* A/B バッジ: 円形+太字で「同室内のどのベッドか」を強調する */
+  .bed-letter{
+    flex:0 0 auto;
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    font-weight:900;
+    color:#fff;
+    background:var(--vacant);
+  }
+  .bed-row:not(.status-vacant) .bed-letter{background:#4338ca;}
+  .bed-row-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
+
+  .bed-card{
+    background:var(--card-bg);
+    border:2px solid var(--line);
+    border-radius:14px;
+    padding:12px;
+    min-height:108px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    cursor:pointer;
+    position:relative;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .bed-card:active{transform:scale(.97);}
+  .bed-card.hidden{display:none;}
+
+  .bed-card.status-vacant{border-color:var(--line); background:var(--vacant-bg);}
+  .bed-card.status-occupied{border-color:#c8d9fb; background:var(--occupied-bg);}
+  .bed-card.status-soon{border-color:var(--soon); background:var(--soon-bg);}
+  .bed-card.status-obs{border-color:var(--obs); background:var(--obs-bg);}
+  .bed-card.status-infect{border-color:var(--infect); background:var(--infect-bg);}
+  .bed-card.status-longstay{border-color:var(--longstay); background:var(--longstay-bg);}
+  .bed-card.status-recovery{border-color:#c8d9fb; background:#f5f7fb; border-style:dashed;}
+
+  .bed-id{font-size:13px;font-weight:800;color:var(--sub);}
+  .bed-patient{font-size:16px;font-weight:800;}
+  .bed-patient.empty{color:var(--vacant);font-weight:700;font-size:15px;}
+  .bed-meta{font-size:11.5px;color:var(--sub);}
+  .badge-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px;}
+  .badge{
+    font-size:10.5px;
+    font-weight:800;
+    padding:2px 7px;
+    border-radius:999px;
+    color:#fff;
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+  }
+  .badge.soon{background:var(--soon);}
+  .badge.obs{background:var(--obs);}
+  .badge.infect{background:var(--infect);}
+  .badge.longstay{background:var(--longstay);}
+  .badge.delay{background:var(--delay);}
+  .badge.privatewish{background:#6b7280;}
+  .badge.obswarn{background:#ea580c;}
+  .badge.gender-m{background:#3b82f6;}
+  .badge.gender-f{background:#ec4899;}
+
+  .gender-tag{
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:22px;height:22px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:900;color:#fff;
+  }
+  .gender-tag.m{background:#3b82f6;}
+  .gender-tag.f{background:#ec4899;}
+
+  /* emergency simulation overlay */
+  .bed-card.candidate{
+    outline:3px solid var(--green);
+    outline-offset:2px;
+    animation:pulse 1.2s infinite;
+  }
+  .bed-card.candidate-top{
+    outline:3px solid #16a34a;
+    box-shadow:0 0 0 5px rgba(22,163,74,.18);
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(22,163,74,.35);}
+    70%{box-shadow:0 0 0 10px rgba(22,163,74,0);}
+    100%{box-shadow:0 0 0 0 rgba(22,163,74,0);}
+  }
+
+  /* ---------- Emergency result panel ---------- */
+  .emg-panel{
+    position:fixed;
+    left:0;right:0;bottom:64px;
+    max-width:1280px;
+    margin:0 auto;
+    background:#fff;
+    border-top:3px solid var(--green);
+    box-shadow:0 -6px 20px rgba(0,0,0,.08);
+    padding:14px 20px;
+    transform:translateY(120%);
+    transition:transform .25s ease;
+    z-index:25;
+  }
+  .emg-panel.show{transform:translateY(0);}
+  .emg-panel.deny{border-top-color:#dc2626;}
+  .emg-panel-top{display:flex;align-items:center;gap:14px;}
+  .emg-result-lamp{
+    width:54px;height:54px;border-radius:50%;
+    background:var(--green);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:900;font-size:13px;
+    flex-shrink:0;
+    text-align:center;
+    line-height:1.15;
+  }
+  .emg-panel.deny .emg-result-lamp{background:#dc2626;}
+  .emg-panel-text h3{margin:0 0 4px 0;font-size:17px;}
+  .emg-panel-text p{margin:0;font-size:13px;color:var(--sub);}
+  .emg-close{
+    margin-left:auto;
+    border:none;background:var(--line);
+    width:34px;height:34px;border-radius:50%;
+    font-size:16px;font-weight:800;cursor:pointer;color:var(--sub);
+  }
+
+  /* ---------- Bottom tab bar ---------- */
+  .tabbar{
+    position:sticky;
+    bottom:0;
+    display:flex;
+    background:#fff;
+    border-top:1px solid var(--line);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+    z-index:30;
+  }
+  .tab{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    padding:8px 2px;
+    border:none;
+    background:none;
+    color:var(--sub);
+    font-size:11px;
+    font-weight:700;
+    cursor:pointer;
+    border-radius:10px;
+  }
+  .tab.active{color:var(--blue); background:var(--blue-bg);}
+  .tab .ico{font-size:19px;}
+
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:80px;
+    transform:translateX(-50%) translateY(20px);
+    background:#1f2937;
+    color:#fff;
+    padding:10px 18px;
+    border-radius:10px;
+    font-size:13px;
+    opacity:0;
+    pointer-events:none;
+    transition:all .2s ease;
+    z-index:50;
+    white-space:nowrap;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* legend */
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px 16px;
+    padding:10px 16px 4px;
+    font-size:11.5px;
+    color:var(--sub);
+  }
+  .legend-item{display:flex;align-items:center;gap:5px;}
+  .legend-dot{width:10px;height:10px;border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- サマリーバー -->
+  <div class="summary">
+    <div class="summary-item">
+      <div class="summary-label">空床</div>
+      <div class="summary-value good" id="sum-vacant">-/19</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">本日入院予定</div>
+      <div class="summary-value accent">0</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">本日退院予定</div>
+      <div class="summary-value" id="sum-discharge-today">-</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">本日手術予定</div>
+      <div class="summary-value warn">0</div>
+    </div>
+    <button class="emg-btn" id="emgBtn">
+      <span class="dot"></span>
+      急患受け入れ判定
+    </button>
+  </div>
+
+  <!-- フィルタチップ -->
+  <div class="filters" id="filters">
+    <div class="chip active" data-filter="all">全て</div>
+    <div class="chip" data-filter="vacant">空床</div>
+    <div class="chip" data-filter="soon">退院予定</div>
+    <div class="chip" data-filter="obs">観察室</div>
+    <div class="chip" data-filter="infect">感染対応</div>
+    <div class="chip" data-filter="longstay">長期入院</div>
+  </div>
+
+  <div class="legend">
+    <span class="legend-item"><span class="legend-dot" style="background:var(--vacant-bg);border:1.5px solid var(--vacant)"></span>空床</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--occupied-bg);border:1.5px solid #c8d9fb"></span>使用中</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--soon-bg);border:1.5px solid var(--soon)"></span>退院予定あり</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--obs-bg);border:1.5px solid var(--obs)"></span>観察室利用中</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--infect-bg);border:1.5px solid var(--infect)"></span>感染対応</span>
+    <span class="legend-item"><span class="legend-dot" style="background:var(--longstay-bg);border:1.5px solid var(--longstay)"></span>長期入院注意</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#6b7280"></span>個室希望(2人部屋で空き待ち)</span>
+    <!-- 更新確認用: iPadから内容を差し替えたとき、この日付が変わっていれば新しい版が反映されている -->
+    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-08-16b</span></span>
+  </div>
+
+  <!-- メイン: ベッドマップ(部屋タイプでグルーピングせず、実際のホワイトボードと同じ部屋番号順で1つのグリッドに表示) -->
+  <div class="main" id="main">
+    <div class="room-section">
+      <div class="room-section-head">
+        <div class="room-section-title">病室(301〜320・実際の並び順)</div>
+        <div class="room-section-note">観察室(305〜308)はナースステーション前。平常時は個室として運用し、術後2日目までの患者を優先収容</div>
+      </div>
+      <div class="bed-grid" id="all-rooms"></div>
+    </div>
+  </div>
+
+  <!-- 急患判定パネル -->
+  <div class="emg-panel" id="emgPanel">
+    <div class="emg-panel-top">
+      <div class="emg-result-lamp" id="emgLamp">受入<br>可能</div>
+      <div class="emg-panel-text">
+        <h3 id="emgTitle">急患を受け入れ可能です</h3>
+        <p id="emgReason">3日間確保できる病床があり、直近の手術予定への影響もありません。緑色でハイライトした病床が候補です。</p>
+      </div>
+      <button class="emg-close" id="emgClose">×</button>
+    </div>
+  </div>
+
+  <!-- 下部タブバー -->
+  <div class="tabbar">
+    <button class="tab active" data-tab="dashboard"><span class="ico">🛏️</span>病床一覧</button>
+    <button class="tab" data-tab="admissions"><span class="ico">📥</span>入院予定</button>
+    <button class="tab" data-tab="discharges"><span class="ico">📤</span>退院予定</button>
+    <button class="tab" data-tab="surgeries"><span class="ico">🗓️</span>手術予定</button>
+    <button class="tab" data-tab="emergency"><span class="ico">🚑</span>急患判定</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* =========================================================
+   ダミーデータ(spec.md 7.5 のサンプルデータ構造に準拠した簡易版)
+   ========================================================= */
+const TODAY = "2026-08-14";
+
+// 「本日入院予定」「本日手術予定」は、現在ホワイトボード上に既に入っている患者とは別に
+// 管理される入院予定表・手術予定表のデータが必要ですが、現時点ではその実データを
+// お預かりしていないため、サマリーバーは仮に0を表示しています【要確認・仮定】。
+// 実データ連携時は入院予定一覧(4.4)・手術予定連動画面(4.6)のデータから自動集計してください。
+
+// 病名(diagnosis)・入院目的・ADLはホワイトボードから読み取れなかった項目のため、
+// 実在の患者名を使いつつ推測で埋めることは避け、必要な箇所は空欄にしています。
+const patients = {
+  p7:  {name:"三石 恵子", gender:"f", note:"PT: 真島"},
+  p9:  {name:"吉川 寿",   gender:"m", note:"PT: 持永"},
+  p23: {name:"西山 安公子", gender:"f", note:"PT: 林"},
+  p24: {name:"山本 栄子", gender:"f", note:"PT: 池田"},
+  p25: {name:"本浦 栄子", gender:"f", note:"PT: 中野"},
+  p26: {name:"奥野 春美", gender:"f", note:"PT: 池田(安静入院)"},
+  p27: {name:"吉村 直江", gender:"f", note:"PT: 林(リカバリー室)"},
+  p28: {name:"永尾 登美枝", gender:"f", note:"PT: 川島"},
+  p29: {name:"椿山 昭子", gender:"f", note:"PT: 土井"},
+  p30: {name:"萬屋 福重", gender:"m", note:"PT: 辻"},
+  p31: {name:"豆田 由美子", gender:"f", note:"PT: 林(安静入院)"},
+  p32: {name:"中村 幸子", gender:"f", note:"PT: 土井"},
+  p33: {name:"池田 マサ子", gender:"f", note:"PT: 池田"},
+  p34: {name:"小川 弘昭", gender:"m", note:"PT: 持永"},
+  p35: {name:"東 成子", gender:"f", note:"PT: 川島"},
+};
+
+// 手術種別ラベル(カード表示用の略称)。tcvoはホワイトボードの表記をそのまま採用(増田整形外科に確認済み: 標準入院日数10日。傷の治りが悪く退院が延びやすい術式とのこと)。
+const SURGERY_LABEL = { tka:"TKA", tha:"THA", spine:"脊椎", uka:"UKA", arthroscopy:"関節鏡", tcvo:"TCVO", other:"手術" };
+
+// 実際の病室配置(2026-08-16 病床管理ホワイトボードで確認済み)。
+// 部屋タイプでグルーピングせず、ホワイトボードと同じ部屋番号順(301→…→320)に並べる。
+// 19床 = 一般床6(2人部屋3室:310・311・312) + 個室13
+//   個室13 = 観察室4室(305・306・307・308) + 特室2室(301・320) + 通常個室7室(302,303,313,315,316,317,318)
+// リカバリー室は19床の集計に含まない(307と308の間に位置)
+// bed定義: id, room(表示名), type(general/private/obs/special/recovery), status, patientKey, extra
+const beds = [
+  // 特室 301(三石さんはUKA術後・LOSは仮定14日)
+  {id:"301", room:"301", type:"special", status:"occupied", patient:"p7", los:"入院12日目", discharge:"2026-08-17", surgeryType:"uka", surgeryDate:"2026-08-03"},
+  // 個室 302(西山さんはTKA術後2日目。観察室ではなく通常個室のため要注意)
+  {id:"302", room:"302", type:"private", status:"occupied", patient:"p23", los:"入院3日目", discharge:"2026-08-26", surgeryType:"tka", surgeryDate:"2026-08-12", obsWarning:true},
+  // 個室 303(吉川さんは関節鏡術後2日目・PT持永。302と同様、観察室ではなく通常個室のため要注意)
+  {id:"303", room:"303", type:"private", status:"occupied", patient:"p9", los:"入院3日目", discharge:"2026-08-17", surgeryType:"arthroscopy", surgeryDate:"2026-08-12", obsWarning:true},
+
+  // 観察室 305-308(ナースステーション前。平常時は個室として運用し、術後2日目までの患者を優先収容) + リカバリー室
+  {id:"305", room:"305", type:"obs", status:"obs", patient:"p24", los:"入院3日目", discharge:"2026-08-17", postOpDay:"術後2日目", surgeryType:"arthroscopy", surgeryDate:"2026-08-12"},
+  {id:"306", room:"306", type:"obs", status:"infect", patient:"p25", los:"入院142日目", discharge:"未定(感染治療継続中)", longStayFlag:true, reason:"3/26 TKA後の感染により長期治療中(要確認)", surgeryType:"tka", surgeryDate:"2026-03-26"},
+  {id:"307", room:"307", type:"obs", status:"occupied", patient:"p26", los:"入院3日目", discharge:"2026-08-23", reason:"安静入院(手術なし)"},
+  // リカバリー室(本来は日帰り手術後の一時回復用だが、8/13〜8/16休診でベッドに余裕があるため
+  // この期間は長期入院患者の受け入れにも使う運用としていることを増田整形外科に確認済み)
+  {id:"RCV", room:"リカバリー室", type:"recovery", status:"occupied", patient:"p27", los:"入院14日目", discharge:"要確認(休診期間中の特別運用)", isRecovery:true, surgeryType:"tka", surgeryDate:"2026-08-01"},
+  {id:"308", room:"308", type:"obs", status:"vacant"},
+
+  // 一般床(2人部屋) 310-312(全員実名に更新)
+  {id:"310-A", room:"310", type:"general", status:"occupied", patient:"p28", los:"入院9日目", discharge:"2026-08-20", surgeryType:"tka", surgeryDate:"2026-08-06"},
+  // TCVOはホワイトボード表記をそのまま採用。標準入院日数10日は確認済みだが、傷の治りが悪く延びやすいとのこと
+  {id:"310-B", room:"310", type:"general", status:"occupied", patient:"p29", los:"入院10日目", discharge:"2026-08-15", surgeryType:"tcvo", surgeryDate:"2026-08-05"},
+  {id:"311-A", room:"311", type:"general", status:"vacant"},
+  // 萬屋さんは標準入院日数(14日)の目安を超えているが、実際の退院予定日はホワイトボードに記載がないため「要確認」表示(遅延と断定しない)
+  // 萬屋さんは確認済み: リハビリ遅延により退院延期中(通常は転院となる症例)
+  {id:"311-B", room:"311", type:"general", status:"longstay", patient:"p30", los:"入院16日目", discharge:"2026-08-21(延期・要再確認)", reason:"リハビリ遅延により退院延期中(通常は転院となる症例)", surgeryType:"tka", surgeryDate:"2026-07-30"},
+  {id:"312-A", room:"312", type:"general", status:"occupied", patient:"p31", los:"入院12日目", discharge:"2026-08-14", reason:"安静入院(手術なし)"},
+  {id:"312-B", room:"312", type:"general", status:"occupied", patient:"p32", los:"入院5日目", discharge:"2026-08-24", surgeryType:"uka", surgeryDate:"2026-08-10"},
+
+  // 個室 313, 315-318
+  // 池田さんも標準入院日数の目安を超えているため「要確認」表示
+  // 池田さんも確認済み: リハビリ遅延により退院延期中(通常は転院となる症例)
+  {id:"313", room:"313", type:"private", status:"longstay", patient:"p33", los:"入院17日目", discharge:"2026-08-19(延期・要再確認)", reason:"リハビリ遅延により退院延期中(通常は転院となる症例)", surgeryType:"tka", surgeryDate:"2026-07-29"},
+  {id:"315", room:"315", type:"private", status:"occupied", patient:"p34", los:"入院14日目", discharge:"2026-08-15", surgeryType:"tka", surgeryDate:"2026-08-01"},
+  {id:"316", room:"316", type:"private", status:"vacant"},
+  {id:"317", room:"317", type:"private", status:"occupied", patient:"p35", los:"入院10日目", discharge:"2026-08-19", surgeryType:"tha", surgeryDate:"2026-08-05"},
+  {id:"318", room:"318", type:"private", status:"vacant"},
+
+  // 特室 320
+  {id:"320", room:"320", type:"special", status:"vacant"},
+];
+
+/* =========================================================
+   描画
+   ========================================================= */
+function statusClass(b){
+  switch(b.status){
+    case "vacant": return "status-vacant";
+    case "soon": return "status-soon";
+    case "obs": return "status-obs";
+    case "infect": return "status-infect";
+    case "longstay": return "status-longstay";
+    default: return b.isRecovery ? "status-recovery" : "status-occupied";
+  }
+}
+
+function badgesFor(b){
+  let html = "";
+  if(b.status === "soon") html += `<span class="badge soon">${b.dischargeLabel || "退院予定"}</span>`;
+  if(b.status === "obs") html += `<span class="badge obs">観察 ${b.postOpDay||""}</span>`;
+  if(b.status === "infect") html += `<span class="badge infect">感染対応</span>`;
+  if(b.status === "longstay" || b.longStayFlag) html += `<span class="badge longstay">⚠️ 長期入院</span>`;
+  if(b.emergency) html += `<span class="badge delay">急患</span>`;
+  if(b.wantsPrivate) html += `<span class="badge privatewish">個室希望</span>`;
+  if(b.obsWarning) html += `<span class="badge obswarn">⚠️ 観察室推奨</span>`;
+  return html;
+}
+
+function surgeryLine(b){
+  if(!b.surgeryType) return "";
+  return `<div class="bed-meta" style="font-weight:800;color:#4b5563;">${SURGERY_LABEL[b.surgeryType]} ${fmt(b.surgeryDate)}</div>`;
+}
+
+function bedCardHTML(b){
+  const p = b.patient ? patients[b.patient] : null;
+  const cls = statusClass(b);
+  const genderTag = p ? `<div class="gender-tag ${p.gender}">${p.gender==="m"?"男":"女"}</div>` : "";
+  return `
+    <div class="bed-card ${cls}" data-id="${b.id}" data-status="${b.status}">
+      ${genderTag}
+      <div class="bed-id">${b.room}${b.type==="general" ? " - "+b.id.split("-")[1] : ""}</div>
+      ${p
+        ? `<div class="bed-patient">${p.name}</div>
+           <div class="bed-meta">${b.los}${b.discharge && b.status!=="soon" ? " ／ 退院予定 "+fmt(b.discharge) : ""}</div>
+           ${surgeryLine(b)}
+           <div class="badge-row">${badgesFor(b)}</div>`
+        : `<div class="bed-patient empty">空床</div>`
+      }
+    </div>
+  `;
+}
+
+function fmt(d){
+  if(!d || d.length!==10) return d;
+  const [y,m,day] = d.split("-");
+  return `${parseInt(m)}/${parseInt(day)}`;
+}
+
+// 2人部屋(general)は連続した同室ベッドを1枚のカードにまとめ、それ以外は1床=1カード。
+// beds配列は既に実際のホワイトボードと同じ部屋番号順(301→…→320)になっているので、
+// 部屋タイプでグルーピングし直さず、そのまま順番にレンダリングする。
+function buildRenderUnits(){
+  const units = [];
+  let i = 0;
+  while (i < beds.length) {
+    const b = beds[i];
+    if (b.type === "general") {
+      const roomBeds = [b];
+      let j = i + 1;
+      while (j < beds.length && beds[j].type === "general" && beds[j].room === b.room) {
+        roomBeds.push(beds[j]);
+        j++;
+      }
+      units.push({ kind: "general2", beds: roomBeds });
+      i = j;
+    } else {
+      units.push({ kind: "single", bed: b });
+      i++;
+    }
+  }
+  return units;
+}
+
+function general2CardHTML(roomBeds){
+  const roomNo = roomBeds[0].room;
+  const rows = roomBeds.map(b=>{
+    const p = b.patient ? patients[b.patient] : null;
+    const cls = statusClass(b);
+    const letter = b.id.split("-")[1] || "";
+    return `
+      <div class="bed-row ${cls}" data-id="${b.id}" data-status="${b.status}" style="position:relative;">
+        <div class="bed-letter">${letter}</div>
+        <div class="bed-row-body">
+          ${p
+            ? `<div style="display:flex;justify-content:space-between;align-items:center;">
+                 <span class="bed-patient" style="font-size:14px;">${p.name}</span>
+                 <span class="gender-tag ${p.gender}" style="position:static;">${p.gender==="m"?"男":"女"}</span>
+               </div>
+               <div class="bed-meta">${b.los}</div>
+               ${surgeryLine(b)}
+               <div class="badge-row">${badgesFor(b)}</div>`
+            : `<div class="bed-patient empty" style="font-size:14px;">空床</div>`
+          }
+        </div>
+      </div>`;
+  }).join("");
+  return `
+    <div class="room2-card">
+      <div class="room2-header">
+        <span class="room2-roomno">${roomNo}号室</span>
+        <span class="room2-tag">2人部屋</span>
+      </div>
+      ${rows}
+    </div>`;
+}
+
+function render(){
+  const units = buildRenderUnits();
+  const html = units.map(u => u.kind === "general2" ? general2CardHTML(u.beds) : bedCardHTML(u.bed)).join("");
+  document.getElementById("all-rooms").innerHTML = html;
+
+  // カードにもクリックイベント委任
+  document.querySelectorAll(".bed-card, .bed-row").forEach(el=>{
+    el.addEventListener("click", ()=>onBedTap(el.dataset.id));
+  });
+
+  updateSummary();
+}
+
+function updateSummary(){
+  const vacantCount = beds.filter(b=>b.status==="vacant").length;
+  document.getElementById("sum-vacant").textContent = `${vacantCount}/19`;
+  const dischargeToday = beds.filter(b=>b.dischargeLabel==="本日退院").length;
+  document.getElementById("sum-discharge-today").textContent = dischargeToday;
+}
+
+/* =========================================================
+   フィルタ
+   ========================================================= */
+document.getElementById("filters").addEventListener("click", (e)=>{
+  const chip = e.target.closest(".chip");
+  if(!chip) return;
+  document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
+  chip.classList.add("active");
+  const f = chip.dataset.filter;
+  document.querySelectorAll(".bed-card, .bed-row").forEach(el=>{
+    const st = el.dataset.status;
+    let show = true;
+    if(f==="vacant") show = st==="vacant";
+    else if(f==="soon") show = st==="soon";
+    else if(f==="obs") show = st==="obs";
+    else if(f==="infect") show = st==="infect";
+    else if(f==="longstay") show = st==="longstay";
+    el.style.display = show ? "" : "none";
+  });
+});
+
+/* =========================================================
+   ベッドタップ(デモ用トースト)
+   ========================================================= */
+function onBedTap(id){
+  const b = beds.find(x=>x.id===id);
+  if(!b) return;
+  if(b.status==="vacant"){
+    showToast(`${b.room} は空床です。入院予定患者を割り当てできます。`);
+  }else{
+    const p = patients[b.patient];
+    showToast(`${p.name} さんの患者詳細を開きます(モックのため未実装)`);
+  }
+}
+
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove("show"), 2600);
+}
+
+/* =========================================================
+   急患受け入れ判定シミュレーション(6.3のロジックを簡易再現)
+   ========================================================= */
+const emgBtn = document.getElementById("emgBtn");
+const emgPanel = document.getElementById("emgPanel");
+const emgClose = document.getElementById("emgClose");
+let emgOn = false;
+
+emgBtn.addEventListener("click", ()=>{
+  emgOn = !emgOn;
+  emgBtn.classList.toggle("on", emgOn);
+  if(emgOn){
+    runEmergencySimulation();
+  }else{
+    closeEmergencyPanel();
+  }
+});
+emgClose.addEventListener("click", ()=>{
+  emgOn = false;
+  emgBtn.classList.remove("on");
+  closeEmergencyPanel();
+});
+
+function runEmergencySimulation(){
+  // 候補優先順位: 観察室優先個室の空床 > 個室の空床 > 一般床の空床(感染は考慮せず簡易デモ)
+  const vacantBeds = beds.filter(b=>b.status==="vacant");
+  const scored = vacantBeds.map(b=>{
+    let score = 0;
+    if(b.type==="obs") score = 100;
+    else if(b.type==="private" || b.type==="special") score = 40;
+    else score = 10;
+    return {...b, score};
+  }).sort((a,b)=>b.score-a.score);
+
+  document.querySelectorAll(".bed-card, .bed-row").forEach(el=>el.classList.remove("candidate","candidate-top"));
+
+  const acceptable = scored.length >= 2; // 3日間確保できるベッドが複数あるかの簡易判定
+  emgPanel.classList.toggle("deny", !acceptable);
+  document.getElementById("emgLamp").innerHTML = acceptable ? "受入<br>可能" : "要検討";
+  document.getElementById("emgTitle").textContent = acceptable
+    ? "急患を受け入れ可能です"
+    : "受け入れは要検討です";
+  document.getElementById("emgReason").textContent = acceptable
+    ? "3日間確保できる病床があり、直近の手術予定への影響もありません。緑色でハイライトした病床が候補です(観察室優先個室を最優先表示)。"
+    : "空床に余裕が少なく、直近の手術予定を圧迫する可能性があります。転院調整も含めて検討してください。";
+
+  scored.forEach((b,i)=>{
+    const el = document.querySelector(`[data-id="${b.id}"]`);
+    if(el) el.classList.add(i===0 ? "candidate-top" : "candidate");
+  });
+
+  emgPanel.classList.add("show");
+}
+
+function closeEmergencyPanel(){
+  emgPanel.classList.remove("show");
+  document.querySelectorAll(".bed-card, .bed-row").forEach(el=>el.classList.remove("candidate","candidate-top"));
+}
+
+/* =========================================================
+   タブバー(モックのため病床一覧以外は未実装トースト)
+   ========================================================= */
+document.querySelectorAll(".tab").forEach(tab=>{
+  tab.addEventListener("click", ()=>{
+    if(tab.dataset.tab === "dashboard"){
+      document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+      tab.classList.add("active");
+      return;
+    }
+    if(tab.dataset.tab === "emergency"){
+      emgBtn.click();
+      return;
+    }
+    showToast("この画面は次のスプリントで実装予定です(モック範囲外)");
+  });
+});
+
+render();
+
+/* =========================================================
+   Service Worker 登録(オフライン表示とホーム画面アプリ化のため)
+   file:// で直接開いた場合は登録できないため、失敗しても無視して通常動作させる
+   ========================================================= */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {
+      /* 未対応環境・ローカルファイル表示では何もしない(アプリ自体は問題なく動く) */
+    });
+  });
+}
+</script>
+</body>
+</html>
