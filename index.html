@@ -159,58 +159,18 @@
     gap:10px;
   }
 
-  /* general 2-bed room card */
-  .room2-card{
-    background:var(--card-bg);
-    border:2px solid var(--line);
-    border-radius:14px;
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
-  }
-  /* 部屋番号は行ごとに繰り返さず、部屋の先頭に一度だけ大きく表示する。
-     2床が同じ部屋にまとまっていることを空床時にも一目で分かるようにするための表示。 */
-  .room2-header{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    padding:8px 12px 7px;
-    background:#eef2ff;
-    border-bottom:2px solid var(--line);
-  }
-  .room2-roomno{font-size:15px;font-weight:900;color:var(--ink);}
+  /* 2人部屋(general)のカード見出しに付ける「2人部屋」タグ。
+     カード自体は個室と全く同じ .bed-card を使い、見出し内だけで区別する。 */
   .room2-tag{
+    display:inline-block;
     font-size:11px;
     font-weight:800;
     color:#4338ca;
     background:#e0e7ff;
     border-radius:999px;
     padding:2px 9px;
+    vertical-align:middle;
   }
-  .room2-card .bed-row{
-    padding:10px 12px;
-    display:flex;
-    flex-direction:row;
-    align-items:flex-start;
-    gap:10px;
-  }
-  .room2-card .bed-row + .bed-row{border-top:1px dashed var(--line);}
-  /* A/B バッジ: 円形+太字で「同室内のどのベッドか」を強調する */
-  .bed-letter{
-    flex:0 0 auto;
-    width:30px;
-    height:30px;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:14px;
-    font-weight:900;
-    color:#fff;
-    background:var(--vacant);
-  }
-  .bed-row:not(.status-vacant) .bed-letter{background:#4338ca;}
-  .bed-row-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
 
   .bed-card{
     background:var(--card-bg);
@@ -430,7 +390,7 @@
     <span class="legend-item"><span class="legend-dot" style="background:var(--longstay-bg);border:1.5px solid var(--longstay)"></span>長期入院注意</span>
     <span class="legend-item"><span class="legend-dot" style="background:#6b7280"></span>個室希望(2人部屋で空き待ち)</span>
     <!-- 更新確認用: iPadから内容を差し替えたとき、この日付が変わっていれば新しい版が反映されている -->
-    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-08-16b</span></span>
+    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-08-16c</span></span>
   </div>
 
   <!-- メイン: ベッドマップ(部屋タイプでグルーピングせず、実際のホワイトボードと同じ部屋番号順で1つのグリッドに表示) -->
@@ -580,14 +540,23 @@ function surgeryLine(b){
   return `<div class="bed-meta" style="font-weight:800;color:#4b5563;">${SURGERY_LABEL[b.surgeryType]} ${fmt(b.surgeryDate)}</div>`;
 }
 
+// 2人部屋(general)のベッド識別を丸英字で強調する(A/Bのみ現状使用)
+const CIRCLED_LETTER = { A: "Ⓐ", B: "Ⓑ", C: "Ⓒ" };
+
 function bedCardHTML(b){
   const p = b.patient ? patients[b.patient] : null;
   const cls = statusClass(b);
   const genderTag = p ? `<div class="gender-tag ${p.gender}">${p.gender==="m"?"男":"女"}</div>` : "";
+  // 2人部屋も個室と全く同じ枠・サイズの「1ベッド=1区画」カードとして表示する。
+  // 見出しだけ「310号室Ⓐ　2人部屋」のように拡張し、空床時でも2人部屋の一部だと分かるようにする。
+  const letter = b.id.includes("-") ? b.id.split("-")[1] : "";
+  const idLine = b.type === "general"
+    ? `<div class="bed-id">${b.room}号室${CIRCLED_LETTER[letter] || letter}<span class="room2-tag" style="margin-left:6px;">2人部屋</span></div>`
+    : `<div class="bed-id">${b.room}</div>`;
   return `
     <div class="bed-card ${cls}" data-id="${b.id}" data-status="${b.status}">
       ${genderTag}
-      <div class="bed-id">${b.room}${b.type==="general" ? " - "+b.id.split("-")[1] : ""}</div>
+      ${idLine}
       ${p
         ? `<div class="bed-patient">${p.name}</div>
            <div class="bed-meta">${b.los}${b.discharge && b.status!=="soon" ? " ／ 退院予定 "+fmt(b.discharge) : ""}</div>
@@ -605,71 +574,14 @@ function fmt(d){
   return `${parseInt(m)}/${parseInt(day)}`;
 }
 
-// 2人部屋(general)は連続した同室ベッドを1枚のカードにまとめ、それ以外は1床=1カード。
-// beds配列は既に実際のホワイトボードと同じ部屋番号順(301→…→320)になっているので、
-// 部屋タイプでグルーピングし直さず、そのまま順番にレンダリングする。
-function buildRenderUnits(){
-  const units = [];
-  let i = 0;
-  while (i < beds.length) {
-    const b = beds[i];
-    if (b.type === "general") {
-      const roomBeds = [b];
-      let j = i + 1;
-      while (j < beds.length && beds[j].type === "general" && beds[j].room === b.room) {
-        roomBeds.push(beds[j]);
-        j++;
-      }
-      units.push({ kind: "general2", beds: roomBeds });
-      i = j;
-    } else {
-      units.push({ kind: "single", bed: b });
-      i++;
-    }
-  }
-  return units;
-}
-
-function general2CardHTML(roomBeds){
-  const roomNo = roomBeds[0].room;
-  const rows = roomBeds.map(b=>{
-    const p = b.patient ? patients[b.patient] : null;
-    const cls = statusClass(b);
-    const letter = b.id.split("-")[1] || "";
-    return `
-      <div class="bed-row ${cls}" data-id="${b.id}" data-status="${b.status}" style="position:relative;">
-        <div class="bed-letter">${letter}</div>
-        <div class="bed-row-body">
-          ${p
-            ? `<div style="display:flex;justify-content:space-between;align-items:center;">
-                 <span class="bed-patient" style="font-size:14px;">${p.name}</span>
-                 <span class="gender-tag ${p.gender}" style="position:static;">${p.gender==="m"?"男":"女"}</span>
-               </div>
-               <div class="bed-meta">${b.los}</div>
-               ${surgeryLine(b)}
-               <div class="badge-row">${badgesFor(b)}</div>`
-            : `<div class="bed-patient empty" style="font-size:14px;">空床</div>`
-          }
-        </div>
-      </div>`;
-  }).join("");
-  return `
-    <div class="room2-card">
-      <div class="room2-header">
-        <span class="room2-roomno">${roomNo}号室</span>
-        <span class="room2-tag">2人部屋</span>
-      </div>
-      ${rows}
-    </div>`;
-}
-
 function render(){
-  const units = buildRenderUnits();
-  const html = units.map(u => u.kind === "general2" ? general2CardHTML(u.beds) : bedCardHTML(u.bed)).join("");
+  // beds配列は既に実際のホワイトボードと同じ部屋番号順(301→…→320)になっているので、
+  // 2人部屋を特別にまとめたりせず、1ベッド=1カードとしてそのまま順番にレンダリングする。
+  const html = beds.map(bedCardHTML).join("");
   document.getElementById("all-rooms").innerHTML = html;
 
   // カードにもクリックイベント委任
-  document.querySelectorAll(".bed-card, .bed-row").forEach(el=>{
+  document.querySelectorAll(".bed-card").forEach(el=>{
     el.addEventListener("click", ()=>onBedTap(el.dataset.id));
   });
 
@@ -692,7 +604,7 @@ document.getElementById("filters").addEventListener("click", (e)=>{
   document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
   chip.classList.add("active");
   const f = chip.dataset.filter;
-  document.querySelectorAll(".bed-card, .bed-row").forEach(el=>{
+  document.querySelectorAll(".bed-card").forEach(el=>{
     const st = el.dataset.status;
     let show = true;
     if(f==="vacant") show = st==="vacant";
@@ -761,7 +673,7 @@ function runEmergencySimulation(){
     return {...b, score};
   }).sort((a,b)=>b.score-a.score);
 
-  document.querySelectorAll(".bed-card, .bed-row").forEach(el=>el.classList.remove("candidate","candidate-top"));
+  document.querySelectorAll(".bed-card").forEach(el=>el.classList.remove("candidate","candidate-top"));
 
   const acceptable = scored.length >= 2; // 3日間確保できるベッドが複数あるかの簡易判定
   emgPanel.classList.toggle("deny", !acceptable);
@@ -783,7 +695,7 @@ function runEmergencySimulation(){
 
 function closeEmergencyPanel(){
   emgPanel.classList.remove("show");
-  document.querySelectorAll(".bed-card, .bed-row").forEach(el=>el.classList.remove("candidate","candidate-top"));
+  document.querySelectorAll(".bed-card").forEach(el=>el.classList.remove("candidate","candidate-top"));
 }
 
 /* =========================================================
