@@ -447,6 +447,41 @@
   .list-card-meta{font-size:12px;color:var(--sub);margin-top:2px;}
   .list-card-reason{font-size:11.5px;color:#b45309;margin-top:3px;}
   .list-empty{color:var(--sub);font-size:13px;text-align:center;padding:30px 0;}
+
+  /* ---------- 空床見込みカレンダー(4週間) ---------- */
+  .vacancy-modal{
+    position:fixed;inset:0;z-index:90;
+    background:rgba(15,23,42,.45);
+    display:none;
+    align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .vacancy-modal.show{display:flex;}
+  .vacancy-modal-box{
+    background:#fff;border-radius:18px;
+    max-width:640px;width:100%;
+    max-height:88vh;overflow-y:auto;
+    padding:20px;
+  }
+  .vacancy-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;}
+  .vacancy-modal-title{font-size:17px;font-weight:900;}
+  .vacancy-modal-note{font-size:12px;color:var(--sub);margin-bottom:14px;line-height:1.5;}
+  .vacancy-modal-close{border:none;background:var(--line);width:34px;height:34px;border-radius:50%;font-size:16px;font-weight:800;cursor:pointer;color:var(--sub);flex-shrink:0;}
+  .vcal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .vcal-head{text-align:center;font-size:11px;font-weight:800;color:var(--sub);padding-bottom:4px;}
+  .vcal-cell{border-radius:10px;padding:8px 4px;text-align:center;border:2px solid transparent;}
+  .vcal-cell.empty{background:transparent;}
+  .vcal-cell.today{border-color:var(--ink);}
+  .vcal-date{font-size:11px;font-weight:700;color:var(--sub);}
+  .vcal-count{font-size:18px;font-weight:900;margin-top:2px;}
+  .vcal-cell.vc-ok{background:#eafaf0;}
+  .vcal-cell.vc-ok .vcal-count{color:var(--green);}
+  .vcal-cell.vc-warn{background:#fff7e6;}
+  .vcal-cell.vc-warn .vcal-count{color:var(--longstay);}
+  .vcal-cell.vc-tight{background:#fdecec;}
+  .vcal-cell.vc-tight .vcal-count{color:var(--delay);}
+  .vacancy-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:11px;color:var(--sub);}
+  .vacancy-legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:4px;vertical-align:middle;}
 </style>
 </head>
 <body>
@@ -488,8 +523,8 @@
 
   <!-- サマリーバー -->
   <div class="summary">
-    <div class="summary-item">
-      <div class="summary-label">空床</div>
+    <div class="summary-item" id="vacantTile" style="cursor:pointer;">
+      <div class="summary-label">空床 ▸見込み</div>
       <div class="summary-value good" id="sum-vacant">-/19</div>
     </div>
     <div class="summary-item">
@@ -529,7 +564,7 @@
     <span class="legend-item"><span class="legend-dot" style="background:var(--longstay-bg);border:1.5px solid var(--longstay)"></span>長期入院注意</span>
     <span class="legend-item"><span class="legend-dot" style="background:#6b7280"></span>個室希望(2人部屋で空き待ち)</span>
     <!-- 更新確認用: iPadから内容を差し替えたとき、この日付が変わっていれば新しい版が反映されている -->
-    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-08-16d</span></span>
+    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-08-16f</span></span>
   </div>
 
   <!-- メイン(タブごとに表示を切り替える) -->
@@ -567,6 +602,27 @@
         <p id="emgReason">3日間確保できる病床があり、直近の手術予定への影響もありません。緑色でハイライトした病床が候補です。</p>
       </div>
       <button class="emg-close" id="emgClose">×</button>
+    </div>
+  </div>
+
+  <!-- 空床見込みカレンダー(4週間)。左上「空床」タップで開く -->
+  <div class="vacancy-modal" id="vacancyModal">
+    <div class="vacancy-modal-box">
+      <div class="vacancy-modal-head">
+        <div class="vacancy-modal-title">空床見込みカレンダー(今後4週間)</div>
+        <button class="vacancy-modal-close" id="vacancyModalClose">×</button>
+      </div>
+      <div class="vacancy-modal-note">
+        現在入院中の患者のうち、退院予定日が確定している方の退院見込みだけを反映した「空床数の下限見込み」です。
+        新しく入院してくる予定患者(予定入院)のデータはまだ登録できないため反映されていません。
+        実際の空床数はここに表示された数より少なくなる場合があります。
+      </div>
+      <div class="vcal-grid" id="vacancyCalGrid"></div>
+      <div class="vacancy-legend">
+        <span><span class="vacancy-legend-dot" style="background:#eafaf0;border:1px solid var(--green);"></span>4床以上</span>
+        <span><span class="vacancy-legend-dot" style="background:#fff7e6;border:1px solid var(--longstay);"></span>2〜3床</span>
+        <span><span class="vacancy-legend-dot" style="background:#fdecec;border:1px solid var(--delay);"></span>0〜1床</span>
+      </div>
     </div>
   </div>
 
@@ -743,6 +799,14 @@ function surgeryLine(b){
   return `<div class="bed-meta" style="font-weight:800;color:#4b5563;">${SURGERY_LABEL[b.surgeryType]} ${fmt(b.surgeryDate)}</div>`;
 }
 
+// 入院予定一覧・退院予定一覧向け: ①手術日 ②術式、または③安静入院(手術なし)の別を1行で示す
+function surgeryOrRestLineHTML(b){
+  if(b.surgeryType){
+    return `<div class="list-card-meta" style="font-weight:800;color:#4b5563;">手術日 ${fmt(b.surgeryDate)} ／ 術式 ${SURGERY_LABEL[b.surgeryType]}</div>`;
+  }
+  return `<div class="list-card-meta" style="font-weight:800;color:#4b5563;">安静入院(手術なし)</div>`;
+}
+
 // 2人部屋(general)のベッド識別を丸英字で強調する(A/Bのみ現状使用)
 const CIRCLED_LETTER = { A: "Ⓐ", B: "Ⓑ", C: "Ⓒ" };
 
@@ -814,6 +878,7 @@ function renderAdmissions(){
             ${b.emergency ? `<span class="badge delay">急患</span>` : ""}
           </div>
           <div class="list-card-meta">入院日 ${fmt(admissionDate)}(${b.los})</div>
+          ${surgeryOrRestLineHTML(b)}
         </div>
       </div>`;
   }).join("");
@@ -866,7 +931,8 @@ function renderDischarges(){
             ${b.longStayFlag || b.status === "longstay" ? `<span class="badge longstay">⚠️ 長期入院</span>` : ""}
           </div>
           <div class="list-card-meta">退院予定 ${b.discharge}${b.los ? "／" + b.los : ""}</div>
-          ${b.reason ? `<div class="list-card-reason">${b.reason}</div>` : ""}
+          ${surgeryOrRestLineHTML(b)}
+          ${b.reason && b.reason !== "安静入院(手術なし)" ? `<div class="list-card-reason">${b.reason}</div>` : ""}
         </div>
       </div>`;
   }).join("");
@@ -1043,6 +1109,73 @@ function closeEmergencyPanel(){
   emgPanel.classList.remove("show");
   document.querySelectorAll(".bed-card").forEach(el=>el.classList.remove("candidate","candidate-top"));
 }
+
+/* =========================================================
+   空床見込みカレンダー(今後4週間)
+   現在入院中の患者のうち、退院予定日が確定している(parsedDischargeDateが取れる)患者
+   だけを対象に、その日を過ぎたら該当ベッドが空くものとして日別の空床数を積み上げる。
+   「要確認」「未定」等、退院予定日が未確定の患者は期間中ずっと入院継続するものとして
+   保守的に扱う(＝実際より空床数が多く出ることはない)。
+   予定入院(これから来る新規患者)のデータは未連携のため反映されておらず、これは
+   あくまで「これ以上は減らない空床数の下限見込み」である点をモーダル内に明記している。
+   ========================================================= */
+function computeVacancyForecast(){
+  const regularBeds = beds.filter(b => !b.isRecovery); // 19床(リカバリー室を除く)
+  const results = [];
+  for(let i=0; i<28; i++){
+    const date = addDaysISO(TODAY, i);
+    let vacant = 0;
+    regularBeds.forEach(b=>{
+      if(b.status === "vacant"){ vacant++; return; }
+      const d = parsedDischargeDate(b);
+      // 退院当日はまだベッドが空いていない(退院処理・清掃が済むのは当日中)ものとして扱い、
+      // 「退院予定日の翌日から空く」とする。これにより本日(0日目)の見込み数がダッシュボード
+      // 上部の実際の空床数と一致する。
+      if(d && d < date) vacant++;
+    });
+    results.push({ date, vacant });
+  }
+  return results;
+}
+
+function vacancyLevelClass(vacant){
+  if(vacant <= 1) return "vc-tight";
+  if(vacant <= 3) return "vc-warn";
+  return "vc-ok";
+}
+
+function renderVacancyCalendar(){
+  const forecast = computeVacancyForecast();
+  const WEEKDAY = ["日","月","火","水","木","金","土"];
+  const firstWeekday = toDateObj(TODAY).getUTCDay();
+
+  const cells = [];
+  for(let i=0; i<firstWeekday; i++) cells.push(null); // 最初の週の空白セル
+  forecast.forEach(f => cells.push(f));
+
+  const headerHTML = WEEKDAY.map(w => `<div class="vcal-head">${w}</div>`).join("");
+  const cellsHTML = cells.map(f => {
+    if(!f) return `<div class="vcal-cell empty"></div>`;
+    const [, m, d] = f.date.split("-");
+    const cls = vacancyLevelClass(f.vacant);
+    const isToday = f.date === TODAY ? " today" : "";
+    return `
+      <div class="vcal-cell ${cls}${isToday}">
+        <div class="vcal-date">${parseInt(m)}/${parseInt(d)}</div>
+        <div class="vcal-count">${f.vacant}</div>
+      </div>`;
+  }).join("");
+
+  document.getElementById("vacancyCalGrid").innerHTML = headerHTML + cellsHTML;
+}
+
+document.getElementById("vacantTile").addEventListener("click", ()=>{
+  renderVacancyCalendar();
+  document.getElementById("vacancyModal").classList.add("show");
+});
+document.getElementById("vacancyModalClose").addEventListener("click", ()=>{
+  document.getElementById("vacancyModal").classList.remove("show");
+});
 
 /* =========================================================
    タブバー
