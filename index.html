@@ -389,6 +389,7 @@
   .role-head_nurse{background:var(--blue);}
   .role-leader_nurse{background:#0891b2;}
   .role-doctor{background:#7c3aed;}
+  .role-clerk{background:#059669;}
   .login-user-name{font-size:15px;font-weight:800;color:var(--ink);}
   .login-user-role{font-size:11.5px;color:var(--sub);}
 
@@ -480,8 +481,85 @@
   .vcal-cell.vc-warn .vcal-count{color:var(--longstay);}
   .vcal-cell.vc-tight{background:#fdecec;}
   .vcal-cell.vc-tight .vcal-count{color:var(--delay);}
+  .vcal-cell.vc-shortage{background:#7f1d1d;}
+  .vcal-cell.vc-shortage .vcal-date{color:#fecaca;}
+  .vcal-cell.vc-shortage .vcal-count{color:#fff;}
   .vacancy-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:11px;color:var(--sub);}
   .vacancy-legend-dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:4px;vertical-align:middle;}
+  .vacancy-shortage-banner{
+    margin-top:14px;padding:10px 12px;border-radius:12px;
+    background:#7f1d1d;color:#fff;font-size:13px;font-weight:800;line-height:1.5;
+  }
+  .vacancy-candidates{margin-top:16px;}
+  .vacancy-candidates-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+  .vacancy-candidates-title{font-size:13.5px;font-weight:800;}
+  .vacancy-sort-tabs{display:flex;gap:6px;}
+  .vacancy-sort-tab{
+    border:1px solid var(--line);background:#fff;border-radius:999px;
+    padding:5px 10px;font-size:11.5px;font-weight:700;color:var(--sub);cursor:pointer;
+  }
+  .vacancy-sort-tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .vacancy-candidate-card{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;font-size:12.5px;
+  }
+  .vacancy-candidate-name{font-weight:800;}
+  .vacancy-candidate-meta{color:var(--sub);font-size:11.5px;margin-top:1px;}
+  .vacancy-candidate-metric{font-weight:900;font-size:13px;white-space:nowrap;}
+
+  /* ---------- 予定入院 新規登録/編集フォーム(2026-08-23追加) ---------- */
+  .sched-add-btn{
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    width:100%;padding:12px;margin-bottom:14px;
+    border:2px dashed var(--blue);border-radius:12px;background:var(--blue-bg);
+    color:var(--blue);font-size:14px;font-weight:800;cursor:pointer;
+  }
+  .sched-form-row{margin-bottom:14px;}
+  .sched-form-row label{display:block;font-size:12px;font-weight:800;color:var(--sub);margin-bottom:5px;}
+  .sched-form-row input[type="text"],
+  .sched-form-row input[type="number"],
+  .sched-form-row input[type="date"],
+  .sched-form-row select{
+    width:100%;padding:10px 12px;font-size:15px;border:1.5px solid var(--line);border-radius:10px;
+    background:#fff;color:var(--ink);font-family:inherit;
+  }
+  .sched-form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .sched-toggle-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .sched-toggle-btn{
+    flex:1;padding:10px 8px;border-radius:10px;border:1.5px solid var(--line);background:#fff;
+    font-size:13px;font-weight:800;color:var(--sub);cursor:pointer;text-align:center;min-width:110px;
+  }
+  .sched-toggle-btn.active{background:var(--ink);border-color:var(--ink);color:#fff;}
+  .sched-checkbox-row{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--ink);}
+  .sched-checkbox-row input{width:20px;height:20px;}
+  .sched-hint{font-size:11.5px;color:var(--sub);margin-top:5px;line-height:1.5;}
+  .sched-photo-box{margin-bottom:14px;padding-bottom:14px;border-bottom:1.5px dashed var(--line);}
+  .sched-photo-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .sched-photo-row .sched-btn{flex:none;min-width:0;padding:10px 14px;font-size:13px;}
+  .sched-photo-preview{max-width:100%;max-height:220px;display:block;margin-top:10px;border-radius:10px;border:1.5px solid var(--line);object-fit:contain;background:#f3f4f6;}
+  .sched-photo-note{
+    margin-top:8px;padding:9px 11px;border-radius:9px;background:#fffbeb;border:1.5px solid #f59e0b;
+    font-size:11.5px;line-height:1.6;color:#92400e;font-weight:700;
+  }
+  .sched-photo-check{margin-top:10px;padding:9px 11px;border-radius:9px;background:#eff6ff;border:1.5px solid var(--blue);}
+  .sched-form-actions{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;}
+  .sched-btn{
+    flex:1;padding:13px;border-radius:10px;border:none;font-size:14.5px;font-weight:800;cursor:pointer;min-width:120px;
+  }
+  .sched-btn.primary{background:var(--blue);color:#fff;}
+  .sched-btn.danger{background:#fff;color:var(--delay);border:1.5px solid var(--delay);}
+  .sched-btn.ghost{background:#fff;color:var(--sub);border:1.5px solid var(--line);}
+  .sched-confirm-box{
+    background:#fdecec;border:1.5px solid var(--delay);border-radius:10px;padding:12px;margin-top:14px;
+  }
+  .sched-confirm-box p{margin:0 0 10px 0;font-size:13px;font-weight:800;color:var(--delay);}
+  .sched-cancelled-toggle{
+    display:block;width:100%;text-align:center;padding:10px;margin-top:16px;
+    background:none;border:none;color:var(--sub);font-size:12.5px;font-weight:700;text-decoration:underline;cursor:pointer;
+  }
+  .list-card.cancelled{opacity:.55;}
+  .list-card.cancelled .list-card-name{text-decoration:line-through;}
+  .list-card.clickable{cursor:pointer;}
 </style>
 </head>
 <body>
@@ -564,7 +642,7 @@
     <span class="legend-item"><span class="legend-dot" style="background:var(--longstay-bg);border:1.5px solid var(--longstay)"></span>長期入院注意</span>
     <span class="legend-item"><span class="legend-dot" style="background:#6b7280"></span>個室希望(2人部屋で空き待ち)</span>
     <!-- 更新確認用: iPadから内容を差し替えたとき、この日付が変わっていれば新しい版が反映されている -->
-    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-08-16f</span></span>
+    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-08-16j</span></span>
   </div>
 
   <!-- メイン(タブごとに表示を切り替える) -->
@@ -578,18 +656,15 @@
       <div class="bed-grid" id="all-rooms"></div>
     </div>
 
-    <!-- 入院予定一覧 (spec.md 4.4)。
-         このモックには「これから入院してくる予定患者」の別データが無いため、
-         現在入院中の患者を入院日が新しい順に並べた簡易版としている。実データ連携時は
-         入院予定表(scheduled)を別途保持し、今日/明日/今週などで絞り込む形に置き換える想定。 -->
+    <!-- 入院予定一覧 (spec.md 4.4)。2026-08-23〜: SCHEDULED_ADMISSIONSを新規登録・編集・
+         キャンセルできるフォーム(#schedFormModal)付き。現在入院中の患者一覧は参考として下に表示。 -->
     <div class="list-view" id="view-admissions" style="display:none;"></div>
 
     <!-- 退院予定一覧 (spec.md 4.5)。退院予定日順に並べ、遅延・本日退院・長期入院理由を表示する。 -->
     <div class="list-view" id="view-discharges" style="display:none;"></div>
 
-    <!-- 手術予定連動画面 (spec.md 4.6)。
-         このモックには「これから行う予定手術」の別データが無いため、現在入院中の患者の
-         手術実施日を新しい順に並べた簡易版としている。 -->
+    <!-- 手術予定連動画面 (spec.md 4.6)。SCHEDULED_ADMISSIONSを手術日順に表示。
+         現在入院中の患者の実施済み手術一覧は参考として下に表示。 -->
     <div class="list-view" id="view-surgeries" style="display:none;"></div>
   </div>
 
@@ -605,6 +680,114 @@
     </div>
   </div>
 
+  <!-- 予定入院 新規登録/編集フォーム(2026-08-23追加、spec.md 13.3④) -->
+  <div class="vacancy-modal" id="schedFormModal">
+    <div class="vacancy-modal-box">
+      <div class="vacancy-modal-head">
+        <div class="vacancy-modal-title" id="schedFormTitle">新規予定入院登録</div>
+        <button class="vacancy-modal-close" id="schedFormClose">×</button>
+      </div>
+
+      <!-- 写真を見ながらの入力支援(2026-08-23追加、spec.md 13.8③)。
+           現時点では自動文字認識は行わず、写真を表示しながら手入力→確認チェックを促す方式。 -->
+      <div class="sched-photo-box">
+        <div class="sched-photo-row">
+          <button type="button" class="sched-btn ghost" id="schedPhotoBtn">📷 手術予定表の写真を読み込む</button>
+          <input type="file" id="schedPhotoInput" accept="image/*" capture="environment" style="display:none;">
+          <button type="button" class="sched-btn ghost" id="schedPhotoRemoveBtn" style="display:none;">✕ 写真を消す</button>
+        </div>
+        <div id="schedPhotoPreviewWrap" style="display:none;">
+          <img id="schedPhotoPreview" class="sched-photo-preview" alt="読み込んだ写真">
+          <div class="sched-photo-note">
+            ⚠️ 現在の版では、写真から文字を自動で読み取る機能はまだ搭載されていません(手術予定表の崩し字は自動読み取りの精度確保が難しいため)。写真を見ながら、下の項目を1つずつ確認して入力してください。文字認識による自動入力は、バックエンド連携後に追加を検討します。
+          </div>
+          <label class="sched-checkbox-row sched-photo-check">
+            <input type="checkbox" id="schedPhotoChecked"> 写真の内容と入力内容を照合し、確認しました
+          </label>
+        </div>
+      </div>
+
+      <div class="sched-form-grid2">
+        <div class="sched-form-row">
+          <label>患者名</label>
+          <input type="text" id="schedName" placeholder="例: 山田 太郎">
+        </div>
+        <div class="sched-form-row">
+          <label>年齢(任意)</label>
+          <input type="number" id="schedAge" min="0" max="120">
+        </div>
+      </div>
+
+      <div class="sched-form-row">
+        <label>性別</label>
+        <div class="sched-toggle-row" id="schedGenderToggle">
+          <button type="button" class="sched-toggle-btn active" data-gender="m">男</button>
+          <button type="button" class="sched-toggle-btn" data-gender="f">女</button>
+        </div>
+      </div>
+
+      <div class="sched-form-row">
+        <label>手術日</label>
+        <input type="date" id="schedSurgeryDate">
+      </div>
+
+      <div class="sched-form-row">
+        <label>入院区分(手術日を入力すると自動設定されます)</label>
+        <div class="sched-toggle-row" id="schedRuleToggle">
+          <button type="button" class="sched-toggle-btn active" data-rule="dayBefore">前日入院(通常)</button>
+          <button type="button" class="sched-toggle-btn" data-rule="sameDay">当日入院(関節鏡・クーリーフ・手の手術など)</button>
+        </div>
+      </div>
+
+      <div class="sched-form-row">
+        <label>入院日(必要であれば直接タップして変更できます)</label>
+        <input type="date" id="schedAdmissionDate">
+        <div class="sched-hint" id="schedAdmissionHint"></div>
+      </div>
+
+      <div class="sched-form-row">
+        <label>術式(自由記述)</label>
+        <input type="text" id="schedProcedure" placeholder="例: 左膝関節鏡">
+      </div>
+
+      <div class="sched-form-grid2">
+        <div class="sched-form-row">
+          <label>執刀医(任意)</label>
+          <select id="schedSurgeon">
+            <option value="">未定</option>
+            <option value="doi">土井口Dr</option>
+            <option value="konishi">小西Dr</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+        <div class="sched-form-row">
+          <label>退院目安(入院日から何泊)</label>
+          <input type="number" id="schedLosNights" min="0" max="60">
+        </div>
+      </div>
+
+      <div class="sched-form-row">
+        <label class="sched-checkbox-row"><input type="checkbox" id="schedTentative"> 仮予約(仮)の枠として登録する</label>
+      </div>
+
+      <div id="schedFormError" class="sched-hint" style="color:var(--delay);font-weight:800;"></div>
+
+      <div class="sched-form-actions">
+        <button type="button" class="sched-btn ghost" id="schedFormCancelBtn">閉じる</button>
+        <button type="button" class="sched-btn danger" id="schedFormDeleteBtn" style="display:none;">この予定をキャンセル</button>
+        <button type="button" class="sched-btn primary" id="schedFormSaveBtn">登録する</button>
+      </div>
+
+      <div class="sched-confirm-box" id="schedConfirmBox" style="display:none;">
+        <p>この予定入院をキャンセルしますか?(記録には「キャンセル済み」として残ります)</p>
+        <div class="sched-form-actions" style="margin-top:0;">
+          <button type="button" class="sched-btn ghost" id="schedConfirmNo">いいえ</button>
+          <button type="button" class="sched-btn danger" id="schedConfirmYes">はい、キャンセルする</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 空床見込みカレンダー(4週間)。左上「空床」タップで開く -->
   <div class="vacancy-modal" id="vacancyModal">
     <div class="vacancy-modal-box">
@@ -613,15 +796,27 @@
         <button class="vacancy-modal-close" id="vacancyModalClose">×</button>
       </div>
       <div class="vacancy-modal-note">
-        現在入院中の患者のうち、退院予定日が確定している方の退院見込みだけを反映した「空床数の下限見込み」です。
-        新しく入院してくる予定患者(予定入院)のデータはまだ登録できないため反映されていません。
-        実際の空床数はここに表示された数より少なくなる場合があります。
+        現在入院中の患者の退院見込みに加え、手術予定表より登録済みの予定入院(入院予定一覧参照)も反映した見込みです。
+        予定入院はまだベッドは未割当のため、頭数のみを差し引いています。登録されていない急な入院・手術が入った場合は、
+        実際の空床数はここに表示された数より少なくなることがあります。
       </div>
       <div class="vcal-grid" id="vacancyCalGrid"></div>
       <div class="vacancy-legend">
         <span><span class="vacancy-legend-dot" style="background:#eafaf0;border:1px solid var(--green);"></span>4床以上</span>
         <span><span class="vacancy-legend-dot" style="background:#fff7e6;border:1px solid var(--longstay);"></span>2〜3床</span>
         <span><span class="vacancy-legend-dot" style="background:#fdecec;border:1px solid var(--delay);"></span>0〜1床</span>
+        <span><span class="vacancy-legend-dot" style="background:#7f1d1d;"></span>不足(19床超過見込み)</span>
+      </div>
+      <div id="vacancyShortageBanner"></div>
+      <div class="vacancy-candidates">
+        <div class="vacancy-candidates-head">
+          <div class="vacancy-candidates-title">退院候補患者</div>
+          <div class="vacancy-sort-tabs" id="vacancySortTabs">
+            <button class="vacancy-sort-tab active" data-sort="overdue">延期が長い順</button>
+            <button class="vacancy-sort-tab" data-sort="soonest">退院予定日が近い順</button>
+          </div>
+        </div>
+        <div id="vacancyCandidateList"></div>
       </div>
     </div>
   </div>
@@ -720,16 +915,59 @@ const beds = [
   {id:"320", room:"320", type:"special", status:"vacant"},
 ];
 
+/* =========================================================
+   予定入院一覧(spec.md 4.4)実データ
+   2026-08-22 手術予定表(ホワイトボード)の写真より、増田整形外科スタッフが内容を確認・
+   訂正した15件。ベッドはまだ割り当てられていない(未来の予定のため)ので roomは持たない。
+   入院日(admissionDate)の算出ルール(本人確認済み):
+     ・原則: 手術日の前日入院(admissionRule:"dayBefore")
+     ・例外: 関節鏡・クーリーフ・手の手術は手術当日入院(admissionRule:"sameDay")
+   退院目安(dischargeDateEstimate)は、福田直樹さんの「3泊4日」(付箋に明記・確定情報)を除き、
+   同院の他症例の実績日数から類推した【推定値・要確認】です(losConfirmed:falseの件)。
+   surgeon("doi"=土井口Dr/"konishi"=小西Dr)は、ホワイトボードの文字色(青/緑)から判明した分のみ設定。
+   色分けは術式ではなく執刀医で使い分けているとのスタッフ確認済み。
+   ruleNote:true = 入院日区分(前日 or 当日)の判断が微妙なため要確認の件(橈骨抜釘・足関節抜釘は
+   「手の手術」に準じて当日入院とすべきか、保守的に前日入院とすべきか未確定)。
+   genderNote:true = 性別を氏名から推測しており未確認の件。
+   tentative:true = ホワイトボード上で「(仮)」と付記されていた、仮予約中の枠。
+   ========================================================= */
+const SCHEDULED_ADMISSIONS_RAW = [
+  {id:"sa01", name:"嶋原 知一",   age:50,  gender:"m", surgeryDate:"2026-08-20", procedure:"左膝関節鏡",            admissionRule:"sameDay",  losNights:5,  losConfirmed:false},
+  {id:"sa02", name:"福田 直樹",   age:51,  gender:"m", surgeryDate:"2026-08-20", procedure:"両膝クーリーフ",          admissionRule:"sameDay",  losNights:3,  losConfirmed:true},
+  {id:"sa03", name:"竹下 由美",   age:null, gender:"f", surgeryDate:"2026-08-21", procedure:"左クーリーフ",            admissionRule:"sameDay",  losNights:2,  losConfirmed:false},
+  {id:"sa04", name:"奥野 真樹",   age:null, gender:"m", surgeryDate:"2026-08-22", procedure:"左THA",                 admissionRule:"dayBefore", losNights:15, losConfirmed:false, surgeon:"doi", genderNote:true},
+  {id:"sa05", name:"小森田 良子", age:61,  gender:"f", surgeryDate:"2026-08-22", procedure:"左TCVO抜釘",             admissionRule:"dayBefore", losNights:7,  losConfirmed:false},
+  {id:"sa06", name:"三輪 弘",     age:86,  gender:"m", surgeryDate:"2026-08-22", procedure:"右膝関節鏡",            admissionRule:"sameDay",  losNights:5,  losConfirmed:false},
+  {id:"sa07", name:"石山 清美",   age:null, gender:"f", surgeryDate:"2026-08-25", procedure:"右橈骨抜釘",             admissionRule:"sameDay",  losNights:3,  losConfirmed:false, ruleNote:true},
+  {id:"sa08", name:"福田 朋子",   age:65,  gender:"f", surgeryDate:"2026-08-25", procedure:"左膝クーリーフ",          admissionRule:"sameDay",  losNights:2,  losConfirmed:false},
+  {id:"sa09", name:"田中 恵子",   age:null, gender:"f", surgeryDate:"2026-08-26", procedure:"右UKA",                 admissionRule:"dayBefore", losNights:15, losConfirmed:false},
+  {id:"sa10", name:"山浦 量子",   age:67,  gender:"f", surgeryDate:"2026-08-26", procedure:"左TKA",                 admissionRule:"dayBefore", losNights:15, losConfirmed:false},
+  {id:"sa11", name:"尾崎 美千代", age:55,  gender:"f", surgeryDate:"2026-08-26", procedure:"除圧固定(L4/5)",         admissionRule:"dayBefore", losNights:15, losConfirmed:false, surgeon:"konishi"},
+  {id:"sa12", name:"志水 加代",   age:72,  gender:"f", surgeryDate:"2026-08-27", procedure:"左TKA(BCR、ACL次第でCR)", admissionRule:"dayBefore", losNights:15, losConfirmed:false},
+  {id:"sa13", name:"吉武 みさお", age:80,  gender:"f", surgeryDate:"2026-08-29", procedure:"左TKA",                 admissionRule:"dayBefore", losNights:15, losConfirmed:false, tentative:true},
+  {id:"sa14", name:"田中 美智子", age:53,  gender:"f", surgeryDate:"2026-08-29", procedure:"左TKA",                 admissionRule:"dayBefore", losNights:15, losConfirmed:false, surgeon:"doi"},
+  {id:"sa15", name:"内本 明子",   age:54,  gender:"f", surgeryDate:"2026-08-29", procedure:"左足関節抜釘",           admissionRule:"dayBefore", losNights:7,  losConfirmed:false, ruleNote:true},
+];
+// admissionDate・dischargeDateEstimateは上記ルールから実行時に算出する(addDaysISOは関数宣言のため巻き上げにより先に呼び出せる)
+const SCHEDULED_ADMISSIONS = SCHEDULED_ADMISSIONS_RAW.map(s => {
+  const admissionDate = s.admissionRule === "sameDay" ? s.surgeryDate : addDaysISO(s.surgeryDate, -1);
+  const dischargeDateEstimate = addDaysISO(admissionDate, s.losNights);
+  return { ...s, admissionDate, dischargeDateEstimate };
+});
+
 // ログイン/役割選択 (spec.md 4.1) で使う職員データ。
 // 【仮定・MVP範囲】全職員共通のデモ用PIN「1234」で仮実装している。
 // 職員ごとの個別PIN発行・管理はバックエンド実装後の対応とする。
+// 2026-08-23: 予定入院の登録・編集・キャンセル操作(spec.md 13.3④)に医療クラークの関与が
+// 必要と確認されたため、役割として追加。氏名・人数は未確認のため仮名【要確認】。
 const USERS = [
   { id:"u-head",    name:"看護師長 佐藤",   role:"head_nurse" },
   { id:"u-leader",  name:"リーダー看護師 木村", role:"leader_nurse" },
   { id:"u-doctor1", name:"増田 太郎 医師",   role:"doctor" },
   { id:"u-doctor2", name:"田中 次郎 医師",   role:"doctor" },
+  { id:"u-clerk1",  name:"医療クラーク(仮)", role:"clerk" },
 ];
-const ROLE_LABEL = { head_nurse:"看護師長", leader_nurse:"リーダー看護師", doctor:"医師" };
+const ROLE_LABEL = { head_nurse:"看護師長", leader_nurse:"リーダー看護師", doctor:"医師", clerk:"医療クラーク" };
 const DEMO_PIN = "1234";
 
 /* =========================================================
@@ -843,45 +1081,339 @@ function fmt(d){
 
 /* =========================================================
    入院予定一覧 (spec.md 4.4)
-   このモックには「これから入院してくる予定患者」の別データが無いため、現在入院中の
-   患者を入院日が新しい順に並べた簡易版としている。実データ連携時は予定入院表を別途
-   保持し、今日/明日/今週などで絞り込む形に置き換える想定。
+   2026-08-16 手術予定表(ホワイトボード)より登録した実データ(SCHEDULED_ADMISSIONS)を
+   入院日が近い順に表示する。あわせて、現在入院中の患者一覧を参考として下に表示する
+   (退院前の患者の入院状況を振り返る用途。将来的には統合予定)。
    ========================================================= */
+function scheduledSurgeonBadge(s){
+  if(s.surgeon === "doi") return `<span class="badge" style="background:#2563eb;">土井口Dr</span>`;
+  if(s.surgeon === "konishi") return `<span class="badge" style="background:#16a34a;">小西Dr</span>`;
+  return "";
+}
+function scheduledFlagBadges(s){
+  let html = "";
+  if(s.tentative) html += `<span class="badge" style="background:#ca8a04;">仮予定</span>`;
+  if(s.ruleNote) html += `<span class="badge longstay">⚠️ 入院区分要確認</span>`;
+  if(s.genderNote) html += `<span class="badge longstay">⚠️ 性別要確認</span>`;
+  return html;
+}
+function scheduledAdmissionCardHTML(s){
+  const isToday = s.admissionDate === TODAY;
+  const cancelled = !!s.cancelled;
+  return `
+    <div class="list-card clickable${cancelled ? " cancelled" : ""}" data-sched-id="${s.id}">
+      <div class="gender-tag ${s.gender}">${s.gender === "m" ? "男" : "女"}</div>
+      <div class="list-card-body">
+        <div class="list-card-top">
+          <span class="list-card-name">${s.name}${s.age ? `(${s.age})` : ""}</span>
+          <span class="list-card-room">病室 未定</span>
+          ${cancelled ? `<span class="badge" style="background:#6b7280;">キャンセル済み</span>` : ""}
+          ${!cancelled && isToday ? `<span class="badge soon">本日入院</span>` : ""}
+          ${scheduledSurgeonBadge(s)}
+          ${cancelled ? "" : scheduledFlagBadges(s)}
+        </div>
+        <div class="list-card-meta">入院日 ${fmt(s.admissionDate)}(${s.admissionRule === "sameDay" ? "手術当日入院" : "手術前日入院"})</div>
+        <div class="list-card-meta" style="font-weight:800;color:#4b5563;">手術日 ${fmt(s.surgeryDate)} ／ 術式 ${s.procedure}</div>
+        <div class="list-card-meta">退院目安 ${fmt(s.dischargeDateEstimate)}${s.losConfirmed ? "" : "(推定)"}</div>
+      </div>
+    </div>`;
+}
+// 2026-08-23追加: キャンセル済みを除いた「有効な」予定入院一覧(表示・集計の基本はこちらを使う)
+function activeScheduledAdmissions(){
+  return SCHEDULED_ADMISSIONS.filter(s => !s.cancelled);
+}
+let showCancelledScheduled = false;
 function renderAdmissions(){
   const container = document.getElementById("view-admissions");
-  const rows = beds
+  const visibleScheduled = showCancelledScheduled ? SCHEDULED_ADMISSIONS : activeScheduledAdmissions();
+  const scheduledRows = [...visibleScheduled].sort((a, b) => a.admissionDate.localeCompare(b.admissionDate));
+
+  const currentRows = beds
     .filter(b => b.patient)
     .map(b => ({ b, p: patients[b.patient], admissionDate: admissionDateOf(b) }))
     .filter(r => r.admissionDate)
     .sort((a, b) => b.admissionDate.localeCompare(a.admissionDate)); // 新しい入院が上
 
-  if(rows.length === 0){
-    container.innerHTML = `<div class="list-empty">現在、表示できる入院情報がありません。</div>`;
-    return;
+  let html = `
+    <div class="room-section-head">
+      <div class="room-section-title">予定入院一覧(手術予定表より登録)</div>
+      <div class="room-section-note">入院日が近い順に表示。退院目安は標準入院日数からの推定値です。カードをタップすると編集・キャンセルできます</div>
+    </div>
+    <button type="button" class="sched-add-btn" id="schedAddBtn">＋ 新規予定入院を登録</button>
+  `;
+  html += scheduledRows.length
+    ? scheduledRows.map(scheduledAdmissionCardHTML).join("")
+    : `<div class="list-empty">登録済みの予定入院はありません。</div>`;
+
+  const cancelledCount = SCHEDULED_ADMISSIONS.filter(s => s.cancelled).length;
+  if(cancelledCount > 0){
+    html += `<button type="button" class="sched-cancelled-toggle" id="schedCancelledToggle">${showCancelledScheduled ? "キャンセル済みを隠す" : `キャンセル済みを表示(${cancelledCount}件)`}</button>`;
   }
 
-  container.innerHTML = `
-    <div class="room-section-head">
-      <div class="room-section-title">入院予定一覧</div>
-      <div class="room-section-note">現在入院中の患者を入院日が新しい順に表示(予定入院データは未連携のため簡易版)</div>
+  html += `
+    <div class="room-section-head" style="margin-top:18px;">
+      <div class="room-section-title">現在入院中の患者(参考)</div>
+      <div class="room-section-note">入院日が新しい順に表示</div>
     </div>
-  ` + rows.map(({ b, p, admissionDate }) => {
-    const isToday = admissionDate === TODAY;
-    return `
-      <div class="list-card">
-        <div class="gender-tag ${p.gender}">${p.gender === "m" ? "男" : "女"}</div>
-        <div class="list-card-body">
-          <div class="list-card-top">
-            <span class="list-card-name">${p.name}</span>
-            <span class="list-card-room">${roomLabel(b)}</span>
-            ${isToday ? `<span class="badge soon">本日入院</span>` : ""}
-            ${b.emergency ? `<span class="badge delay">急患</span>` : ""}
-          </div>
-          <div class="list-card-meta">入院日 ${fmt(admissionDate)}(${b.los})</div>
-          ${surgeryOrRestLineHTML(b)}
-        </div>
-      </div>`;
-  }).join("");
+  `;
+  html += currentRows.length
+    ? currentRows.map(({ b, p, admissionDate }) => {
+        const isToday = admissionDate === TODAY;
+        return `
+          <div class="list-card">
+            <div class="gender-tag ${p.gender}">${p.gender === "m" ? "男" : "女"}</div>
+            <div class="list-card-body">
+              <div class="list-card-top">
+                <span class="list-card-name">${p.name}</span>
+                <span class="list-card-room">${roomLabel(b)}</span>
+                ${isToday ? `<span class="badge soon">本日入院</span>` : ""}
+                ${b.emergency ? `<span class="badge delay">急患</span>` : ""}
+              </div>
+              <div class="list-card-meta">入院日 ${fmt(admissionDate)}(${b.los})</div>
+              ${surgeryOrRestLineHTML(b)}
+            </div>
+          </div>`;
+      }).join("")
+    : `<div class="list-empty">現在入院中の患者はいません。</div>`;
+
+  container.innerHTML = html;
+
+  document.getElementById("schedAddBtn").addEventListener("click", () => openSchedForm(null));
+  container.querySelectorAll(".list-card.clickable").forEach(el => {
+    el.addEventListener("click", () => {
+      const s = SCHEDULED_ADMISSIONS.find(x => x.id === el.dataset.schedId);
+      if(s) openSchedForm(s);
+    });
+  });
+  const toggleBtn = document.getElementById("schedCancelledToggle");
+  if(toggleBtn){
+    toggleBtn.addEventListener("click", () => {
+      showCancelledScheduled = !showCancelledScheduled;
+      renderAdmissions();
+    });
+  }
+}
+
+/* =========================================================
+   予定入院 新規登録/編集フォーム (2026-08-23追加, spec.md 13.3④)
+   看護師長/リーダー看護師/医師/医療クラークいずれのログインでも操作可能(権限による制限なし、
+   確認済みの通り)。このモックはSCHEDULED_ADMISSIONS配列をメモリ上で直接書き換えるのみで、
+   リロードすると元のデータに戻る(バックエンド未実装のため。①/⑤のクラウド化以降、実際に
+   保存されるようになる想定)。
+   ========================================================= */
+let schedIdCounter = SCHEDULED_ADMISSIONS.reduce((max, s) => {
+  const n = parseInt(String(s.id).replace(/\D/g, ""), 10);
+  return isNaN(n) ? max : Math.max(max, n);
+}, 0) + 1;
+let schedEditingId = null; // null = 新規登録モード
+
+const schedFormModal = document.getElementById("schedFormModal");
+const schedGenderToggle = document.getElementById("schedGenderToggle");
+const schedRuleToggle = document.getElementById("schedRuleToggle");
+let schedGenderValue = "m";
+let schedRuleValue = "dayBefore";
+
+const SCHED_DEFAULT_LOS = { sameDay: 3, dayBefore: 15 };
+
+// 写真を見ながらの入力支援(2026-08-23追加、spec.md 13.8③)。
+// 自動文字認識は行わず、写真を画面上に表示して「見ながら手入力→確認チェック」を促す方式。
+// 写真データはこのフォームの入力補助としてのみブラウザ内に一時保持し、保存先レコードには含めない
+// (バックエンドが無くリロードで消えるため、大きな画像データを保持し続ける意味が薄いこと、
+//  および将来クラウド化した際は画像保存の要否・保存方法を別途検討する必要があるため)。
+let schedPhotoDataUrl = null;
+
+function resetSchedPhoto(){
+  schedPhotoDataUrl = null;
+  document.getElementById("schedPhotoInput").value = "";
+  document.getElementById("schedPhotoPreview").src = "";
+  document.getElementById("schedPhotoPreviewWrap").style.display = "none";
+  document.getElementById("schedPhotoRemoveBtn").style.display = "none";
+  document.getElementById("schedPhotoChecked").checked = false;
+}
+
+function resetSchedForm(){
+  document.getElementById("schedName").value = "";
+  document.getElementById("schedAge").value = "";
+  document.getElementById("schedSurgeryDate").value = "";
+  document.getElementById("schedAdmissionDate").value = "";
+  document.getElementById("schedProcedure").value = "";
+  document.getElementById("schedSurgeon").value = "";
+  const losInput = document.getElementById("schedLosNights");
+  losInput.value = SCHED_DEFAULT_LOS.dayBefore;
+  delete losInput.dataset.touched;
+  document.getElementById("schedTentative").checked = false;
+  document.getElementById("schedFormError").textContent = "";
+  document.getElementById("schedAdmissionHint").textContent = "";
+  document.getElementById("schedConfirmBox").style.display = "none";
+  resetSchedPhoto();
+  setSchedGenderUI("m");
+  setSchedRuleUI("dayBefore");
+}
+
+document.getElementById("schedPhotoBtn").addEventListener("click", () => {
+  document.getElementById("schedPhotoInput").click();
+});
+document.getElementById("schedPhotoInput").addEventListener("change", (e) => {
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    schedPhotoDataUrl = reader.result;
+    document.getElementById("schedPhotoPreview").src = schedPhotoDataUrl;
+    document.getElementById("schedPhotoPreviewWrap").style.display = "";
+    document.getElementById("schedPhotoRemoveBtn").style.display = "";
+    document.getElementById("schedPhotoChecked").checked = false;
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById("schedPhotoRemoveBtn").addEventListener("click", resetSchedPhoto);
+
+function setSchedGenderUI(v){
+  schedGenderValue = v;
+  schedGenderToggle.querySelectorAll(".sched-toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.gender === v));
+}
+function setSchedRuleUI(v){
+  schedRuleValue = v;
+  schedRuleToggle.querySelectorAll(".sched-toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.rule === v));
+}
+
+// 手術日または入院区分(前日/当日)が変わるたびに、入院日と退院目安泊数のデフォルトを自動再計算する。
+// 入院日欄は直接タップ(iOSではカレンダー形式のピッカーが開く)して個別に上書きできる。
+function recomputeSchedAdmissionDate(){
+  const surgeryDate = document.getElementById("schedSurgeryDate").value;
+  if(!surgeryDate) return;
+  const admissionDate = schedRuleValue === "sameDay" ? surgeryDate : addDaysISO(surgeryDate, -1);
+  document.getElementById("schedAdmissionDate").value = admissionDate;
+  document.getElementById("schedAdmissionHint").textContent =
+    `手術日と入院区分から自動設定しました(${schedRuleValue === "sameDay" ? "手術当日入院" : "手術前日入院"})。上の入院日欄を直接タップすると個別に変更できます。`;
+  const losInput = document.getElementById("schedLosNights");
+  if(!losInput.dataset.touched){
+    losInput.value = SCHED_DEFAULT_LOS[schedRuleValue];
+  }
+}
+
+document.getElementById("schedSurgeryDate").addEventListener("change", recomputeSchedAdmissionDate);
+document.getElementById("schedLosNights").addEventListener("input", (e) => { e.target.dataset.touched = "1"; });
+document.getElementById("schedAdmissionDate").addEventListener("change", () => {
+  document.getElementById("schedAdmissionHint").textContent = "入院日を手動で変更しました。";
+});
+
+schedGenderToggle.addEventListener("click", (e) => {
+  const btn = e.target.closest(".sched-toggle-btn");
+  if(!btn) return;
+  setSchedGenderUI(btn.dataset.gender);
+});
+schedRuleToggle.addEventListener("click", (e) => {
+  const btn = e.target.closest(".sched-toggle-btn");
+  if(!btn) return;
+  setSchedRuleUI(btn.dataset.rule);
+  recomputeSchedAdmissionDate();
+});
+
+function openSchedForm(existing){
+  resetSchedForm();
+  schedEditingId = existing ? existing.id : null;
+  document.getElementById("schedFormTitle").textContent = existing ? "予定入院の編集" : "新規予定入院登録";
+  document.getElementById("schedFormSaveBtn").textContent = existing ? "更新する" : "登録する";
+  document.getElementById("schedFormDeleteBtn").style.display = (existing && !existing.cancelled) ? "" : "none";
+
+  if(existing){
+    document.getElementById("schedName").value = existing.name || "";
+    document.getElementById("schedAge").value = existing.age || "";
+    setSchedGenderUI(existing.gender || "m");
+    document.getElementById("schedSurgeryDate").value = existing.surgeryDate || "";
+    setSchedRuleUI(existing.admissionRule || "dayBefore");
+    document.getElementById("schedAdmissionDate").value = existing.admissionDate || "";
+    document.getElementById("schedProcedure").value = existing.procedure || "";
+    document.getElementById("schedSurgeon").value = existing.surgeon || "";
+    const losInput = document.getElementById("schedLosNights");
+    losInput.value = existing.losNights != null ? existing.losNights : SCHED_DEFAULT_LOS[existing.admissionRule || "dayBefore"];
+    losInput.dataset.touched = "1"; // 既存の値を優先し、区分変更で勝手に上書きしない
+    document.getElementById("schedTentative").checked = !!existing.tentative;
+  }
+
+  schedFormModal.classList.add("show");
+}
+
+function closeSchedForm(){
+  schedFormModal.classList.remove("show");
+  schedEditingId = null;
+}
+
+function saveSchedForm(){
+  const name = document.getElementById("schedName").value.trim();
+  const surgeryDate = document.getElementById("schedSurgeryDate").value;
+  const admissionDate = document.getElementById("schedAdmissionDate").value;
+  const losNights = parseInt(document.getElementById("schedLosNights").value, 10);
+  const errEl = document.getElementById("schedFormError");
+
+  if(!name){ errEl.textContent = "患者名を入力してください。"; return; }
+  if(!surgeryDate){ errEl.textContent = "手術日を入力してください。"; return; }
+  if(!admissionDate){ errEl.textContent = "入院日を入力してください。"; return; }
+  if(isNaN(losNights) || losNights < 0){ errEl.textContent = "退院目安(泊数)を正しく入力してください。"; return; }
+  if(schedPhotoDataUrl && !document.getElementById("schedPhotoChecked").checked){
+    errEl.textContent = "写真を読み込んだ場合は、内容を確認してから「写真の内容と入力内容を照合し、確認しました」にチェックを入れてください。";
+    return;
+  }
+  errEl.textContent = "";
+
+  const ageVal = document.getElementById("schedAge").value;
+  const entry = {
+    name,
+    age: ageVal ? parseInt(ageVal, 10) : null,
+    gender: schedGenderValue,
+    surgeryDate,
+    procedure: document.getElementById("schedProcedure").value.trim() || "(術式未入力)",
+    admissionRule: schedRuleValue,
+    admissionDate,
+    losNights,
+    losConfirmed: false,
+    dischargeDateEstimate: addDaysISO(admissionDate, losNights),
+    surgeon: document.getElementById("schedSurgeon").value || undefined,
+    tentative: document.getElementById("schedTentative").checked,
+  };
+
+  if(schedEditingId){
+    const idx = SCHEDULED_ADMISSIONS.findIndex(s => s.id === schedEditingId);
+    if(idx !== -1){
+      SCHEDULED_ADMISSIONS[idx] = { ...SCHEDULED_ADMISSIONS[idx], ...entry };
+    }
+  } else {
+    entry.id = "sa" + String(schedIdCounter++).padStart(2, "0");
+    SCHEDULED_ADMISSIONS.push(entry);
+  }
+
+  closeSchedForm();
+  refreshScheduledDependentViews();
+}
+
+document.getElementById("schedFormSaveBtn").addEventListener("click", saveSchedForm);
+document.getElementById("schedFormCancelBtn").addEventListener("click", closeSchedForm);
+document.getElementById("schedFormClose").addEventListener("click", closeSchedForm);
+
+document.getElementById("schedFormDeleteBtn").addEventListener("click", () => {
+  document.getElementById("schedConfirmBox").style.display = "";
+});
+document.getElementById("schedConfirmNo").addEventListener("click", () => {
+  document.getElementById("schedConfirmBox").style.display = "none";
+});
+document.getElementById("schedConfirmYes").addEventListener("click", () => {
+  const idx = SCHEDULED_ADMISSIONS.findIndex(s => s.id === schedEditingId);
+  if(idx !== -1) SCHEDULED_ADMISSIONS[idx].cancelled = true;
+  closeSchedForm();
+  refreshScheduledDependentViews();
+});
+
+// 予定入院の追加・編集・キャンセルは、入院予定一覧・手術予定一覧・本日サマリー・
+// (開いていれば)空床見込みカレンダーすべてに即座に反映する
+function refreshScheduledDependentViews(){
+  renderAdmissions();
+  renderSurgeries();
+  updateSummary();
+  if(document.getElementById("vacancyModal").classList.contains("show")){
+    renderVacancyCalendar();
+    renderDischargeCandidates();
+  }
 }
 
 /* =========================================================
@@ -940,42 +1472,72 @@ function renderDischarges(){
 
 /* =========================================================
    手術予定連動画面 (spec.md 4.6)
-   このモックには「これから行う予定手術」の別データが無いため、現在入院中の患者の
-   手術実施日を新しい順に並べた簡易版としている。
+   2026-08-16 手術予定表(ホワイトボード)より登録した実データ(SCHEDULED_ADMISSIONS)を
+   手術日が近い順に表示する。あわせて、現在入院中の患者の実施済み手術一覧を参考として
+   下に表示する。
    ========================================================= */
+function scheduledSurgeryCardHTML(s){
+  const daysUntil = diffDaysISO(TODAY, s.surgeryDate);
+  const dayLabel = daysUntil === 0 ? "本日手術" : daysUntil > 0 ? `${daysUntil}日後に予定` : `術後${-daysUntil}日`;
+  return `
+    <div class="list-card">
+      <div class="gender-tag ${s.gender}">${s.gender === "m" ? "男" : "女"}</div>
+      <div class="list-card-body">
+        <div class="list-card-top">
+          <span class="list-card-name">${s.name}${s.age ? `(${s.age})` : ""}</span>
+          <span class="badge obs">${s.procedure}</span>
+          ${scheduledSurgeonBadge(s)}
+          ${scheduledFlagBadges(s)}
+        </div>
+        <div class="list-card-meta">${fmt(s.surgeryDate)}(${dayLabel})</div>
+      </div>
+    </div>`;
+}
 function renderSurgeries(){
   const container = document.getElementById("view-surgeries");
-  const rows = beds
+  const scheduledRows = [...activeScheduledAdmissions()].sort((a, b) => a.surgeryDate.localeCompare(b.surgeryDate));
+
+  const currentRows = beds
     .filter(b => b.patient && b.surgeryType)
     .map(b => ({ b, p: patients[b.patient] }))
     .sort((a, b) => b.b.surgeryDate.localeCompare(a.b.surgeryDate)); // 新しい手術が上
 
-  if(rows.length === 0){
-    container.innerHTML = `<div class="list-empty">現在、表示できる手術情報がありません。</div>`;
-    return;
-  }
-
-  container.innerHTML = `
+  let html = `
     <div class="room-section-head">
-      <div class="room-section-title">手術予定一覧</div>
-      <div class="room-section-note">現在入院中の患者の手術実施日を新しい順に表示(将来の手術予定データは未連携のため簡易版)</div>
+      <div class="room-section-title">手術予定一覧(手術予定表より登録)</div>
+      <div class="room-section-note">手術日が近い順に表示</div>
     </div>
-  ` + rows.map(({ b, p }) => {
-    const daysSince = diffDaysISO(b.surgeryDate, TODAY);
-    const dayLabel = daysSince === 0 ? "本日手術" : daysSince > 0 ? `術後${daysSince}日` : `${-daysSince}日後に予定`;
-    return `
-      <div class="list-card">
-        <div class="gender-tag ${p.gender}">${p.gender === "m" ? "男" : "女"}</div>
-        <div class="list-card-body">
-          <div class="list-card-top">
-            <span class="list-card-name">${p.name}</span>
-            <span class="list-card-room">${roomLabel(b)}</span>
-            <span class="badge obs">${SURGERY_LABEL[b.surgeryType]}</span>
-          </div>
-          <div class="list-card-meta">${fmt(b.surgeryDate)}(${dayLabel})</div>
-        </div>
-      </div>`;
-  }).join("");
+  `;
+  html += scheduledRows.length
+    ? scheduledRows.map(scheduledSurgeryCardHTML).join("")
+    : `<div class="list-empty">登録済みの予定手術はありません。</div>`;
+
+  html += `
+    <div class="room-section-head" style="margin-top:18px;">
+      <div class="room-section-title">実施済み手術(参考)</div>
+      <div class="room-section-note">現在入院中の患者の手術実施日を新しい順に表示</div>
+    </div>
+  `;
+  html += currentRows.length
+    ? currentRows.map(({ b, p }) => {
+        const daysSince = diffDaysISO(b.surgeryDate, TODAY);
+        const dayLabel = daysSince === 0 ? "本日手術" : daysSince > 0 ? `術後${daysSince}日` : `${-daysSince}日後に予定`;
+        return `
+          <div class="list-card">
+            <div class="gender-tag ${p.gender}">${p.gender === "m" ? "男" : "女"}</div>
+            <div class="list-card-body">
+              <div class="list-card-top">
+                <span class="list-card-name">${p.name}</span>
+                <span class="list-card-room">${roomLabel(b)}</span>
+                <span class="badge obs">${SURGERY_LABEL[b.surgeryType]}</span>
+              </div>
+              <div class="list-card-meta">${fmt(b.surgeryDate)}(${dayLabel})</div>
+            </div>
+          </div>`;
+      }).join("")
+    : `<div class="list-empty">現在、表示できる手術情報がありません。</div>`;
+
+  container.innerHTML = html;
 }
 
 function render(){
@@ -996,14 +1558,18 @@ function updateSummary(){
   const vacantCount = beds.filter(b=>b.status==="vacant").length;
   document.getElementById("sum-vacant").textContent = `${vacantCount}/19`;
 
-  // 退院・入院・手術の「本日」件数は、現在入院中の患者データから逆算している(要約参照)
+  // 退院件数は、現在入院中の患者データから逆算している(要約参照)
   const dischargeToday = beds.filter(b => parsedDischargeDate(b) === TODAY).length;
   document.getElementById("sum-discharge-today").textContent = dischargeToday;
 
-  const admissionToday = beds.filter(b => admissionDateOf(b) === TODAY).length;
+  // 入院・手術件数は、現在入院中の患者データからの逆算分に加え、
+  // 登録済みの予定入院(SCHEDULED_ADMISSIONS、キャンセル済みを除く)の本日該当分も合算する
+  const admissionToday = beds.filter(b => admissionDateOf(b) === TODAY).length
+    + activeScheduledAdmissions().filter(s => s.admissionDate === TODAY).length;
   document.getElementById("sum-admission-today").textContent = admissionToday;
 
-  const surgeryToday = beds.filter(b => b.surgeryDate === TODAY).length;
+  const surgeryToday = beds.filter(b => b.surgeryDate === TODAY).length
+    + activeScheduledAdmissions().filter(s => s.surgeryDate === TODAY).length;
   document.getElementById("sum-surgery-today").textContent = surgeryToday;
 }
 
@@ -1116,8 +1682,13 @@ function closeEmergencyPanel(){
    だけを対象に、その日を過ぎたら該当ベッドが空くものとして日別の空床数を積み上げる。
    「要確認」「未定」等、退院予定日が未確定の患者は期間中ずっと入院継続するものとして
    保守的に扱う(＝実際より空床数が多く出ることはない)。
-   予定入院(これから来る新規患者)のデータは未連携のため反映されておらず、これは
-   あくまで「これ以上は減らない空床数の下限見込み」である点をモーダル内に明記している。
+   2026-08-16 手術予定表より登録した予定入院(SCHEDULED_ADMISSIONS)は、まだ特定のベッドが
+   割り当てられていない(どのベッドが空くかは当日にならないと決まらない)ため、日別の空床数
+   から人数分を差し引く形で反映する(どのベッドかまでは特定しない、あくまで頭数の見込み)。
+   2026-08-23追加: 見込み空床数は0でクランプせず、マイナス(19床超過見込み)もそのまま返す。
+   「いつまでに何人退院が必要か」をこのマイナス値からそのまま読み取れるようにするため。
+   ダッシュボード上部の「空床」タイル(updateSummary)は実際の現在の空床数を表示するもの
+   なので、そちらは引き続き0未満にはならない別ロジック(beds.filter直接カウント)のまま。
    ========================================================= */
 function computeVacancyForecast(){
   const regularBeds = beds.filter(b => !b.isRecovery); // 19床(リカバリー室を除く)
@@ -1133,12 +1704,16 @@ function computeVacancyForecast(){
       // 上部の実際の空床数と一致する。
       if(d && d < date) vacant++;
     });
+    // 予定入院(まだベッド未割当)の分を、入院日〜退院目安日の期間だけ人数分差し引く
+    const scheduledOccupied = activeScheduledAdmissions().filter(s => s.admissionDate <= date && date < s.dischargeDateEstimate).length;
+    vacant = vacant - scheduledOccupied; // マイナス(不足)もそのまま保持する
     results.push({ date, vacant });
   }
   return results;
 }
 
 function vacancyLevelClass(vacant){
+  if(vacant < 0) return "vc-shortage";
   if(vacant <= 1) return "vc-tight";
   if(vacant <= 3) return "vc-warn";
   return "vc-ok";
@@ -1167,10 +1742,98 @@ function renderVacancyCalendar(){
   }).join("");
 
   document.getElementById("vacancyCalGrid").innerHTML = headerHTML + cellsHTML;
+  renderShortageBanner(forecast);
 }
+
+// 【⑥ 2026-08-23追加】不足バナー: 4週間以内に空床見込みがマイナスになる日があれば警告表示する
+function renderShortageBanner(forecast){
+  const el = document.getElementById("vacancyShortageBanner");
+  const shortageDays = forecast.filter(f => f.vacant < 0);
+  if(shortageDays.length === 0){ el.innerHTML = ""; return; }
+
+  const firstShortage = shortageDays[0];
+  const worst = shortageDays.reduce((a,b) => (b.vacant < a.vacant ? b : a));
+  const [, fm, fd] = firstShortage.date.split("-");
+  const [, wm, wd] = worst.date.split("-");
+  const sameDay = firstShortage.date === worst.date;
+
+  el.innerHTML = `
+    <div class="vacancy-shortage-banner">
+      ⚠️ ${parseInt(fm)}/${parseInt(fd)}時点で${-firstShortage.vacant}床不足の見込みです。
+      ${sameDay ? "" : `最大では${parseInt(wm)}/${parseInt(wd)}時点で${-worst.vacant}床不足の見込みです。`}
+      下記の退院候補患者を参考に、早期退院・転院調整をご検討ください。
+    </div>`;
+}
+
+/* =========================================================
+   退院候補患者(2026-08-23追加、spec.md 13.3⑥)
+   現在入院中の患者のうち退院予定日が確定している人を対象に、次の2つの並び順で表示する。
+   ・overdue: 標準入院日数(STANDARD_LOS_BY_TYPE)からの延期日数が長い順(手術なし患者は対象外)
+   ・soonest: 退院予定日が近い順(全員が対象)
+   ========================================================= */
+const STANDARD_LOS_BY_TYPE = { tka:14, tha:14, spine:10, uka:14, arthroscopy:5, tcvo:10, other:5 };
+let vacancySortMode = "overdue";
+
+function computeDischargeCandidates(sortMode){
+  const rows = beds
+    .filter(b => b.patient)
+    .map(b => {
+      const p = patients[b.patient];
+      const dischargeDate = parsedDischargeDate(b);
+      const admissionDate = admissionDateOf(b);
+      const losDays = admissionDate ? diffDaysISO(admissionDate, TODAY) + 1 : null;
+      const standardLos = b.surgeryType ? STANDARD_LOS_BY_TYPE[b.surgeryType] : null;
+      const overDays = (standardLos != null && losDays != null) ? losDays - standardLos : null;
+      return { b, p, dischargeDate, losDays, overDays };
+    });
+
+  if(sortMode === "overdue"){
+    return rows
+      .filter(r => r.overDays != null && r.overDays > 0)
+      .sort((a, b) => b.overDays - a.overDays);
+  }
+  // soonest: 退院予定日が確定している人のみ、近い順
+  return rows
+    .filter(r => r.dischargeDate)
+    .sort((a, b) => a.dischargeDate.localeCompare(b.dischargeDate));
+}
+
+function renderDischargeCandidates(){
+  const container = document.getElementById("vacancyCandidateList");
+  const rows = computeDischargeCandidates(vacancySortMode);
+
+  if(rows.length === 0){
+    container.innerHTML = `<div class="list-empty">該当する患者はいません。</div>`;
+    return;
+  }
+
+  container.innerHTML = rows.map(({ b, p, dischargeDate, losDays, overDays }) => {
+    const metric = vacancySortMode === "overdue"
+      ? `<span class="vacancy-candidate-metric" style="color:var(--delay);">標準+${overDays}日</span>`
+      : `<span class="vacancy-candidate-metric" style="color:var(--soon);">${dischargeDate ? fmt(dischargeDate) : "未定"}</span>`;
+    return `
+      <div class="vacancy-candidate-card">
+        <div>
+          <div class="vacancy-candidate-name">${p.name}<span style="font-weight:600;color:var(--sub);"> ${roomLabel(b)}</span></div>
+          <div class="vacancy-candidate-meta">入院${losDays}日目${b.surgeryType ? "／" + SURGERY_LABEL[b.surgeryType] : ""}${dischargeDate ? "／退院予定 " + fmt(dischargeDate) : "／退院予定未定"}</div>
+        </div>
+        ${metric}
+      </div>`;
+  }).join("");
+}
+
+document.getElementById("vacancySortTabs").addEventListener("click", (e)=>{
+  const btn = e.target.closest(".vacancy-sort-tab");
+  if(!btn) return;
+  vacancySortMode = btn.dataset.sort;
+  document.querySelectorAll(".vacancy-sort-tab").forEach(t=>t.classList.remove("active"));
+  btn.classList.add("active");
+  renderDischargeCandidates();
+});
 
 document.getElementById("vacantTile").addEventListener("click", ()=>{
   renderVacancyCalendar();
+  renderDischargeCandidates();
   document.getElementById("vacancyModal").classList.add("show");
 });
 document.getElementById("vacancyModalClose").addEventListener("click", ()=>{
