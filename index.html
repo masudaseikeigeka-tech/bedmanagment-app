@@ -542,6 +542,24 @@
     font-size:11.5px;line-height:1.6;color:#92400e;font-weight:700;
   }
   .sched-photo-check{margin-top:10px;padding:9px 11px;border-radius:9px;background:#eff6ff;border:1.5px solid var(--blue);}
+  /* 執刀医ごとの術式ピッカー(2026-08-23追加)。増田Drのみ術式数が多いため部位ごとに折りたたむ。 */
+  .sched-procedure-picker-label{font-size:12px;font-weight:800;color:var(--sub);margin-bottom:8px;}
+  .sched-procedure-group{margin-bottom:8px;}
+  .sched-procedure-group-header{
+    width:100%;display:flex;align-items:center;justify-content:space-between;gap:6px;
+    padding:9px 12px;border-radius:9px;border:1.5px solid var(--line);background:#f9fafb;
+    font-size:13px;font-weight:800;color:var(--ink);cursor:pointer;
+  }
+  .sched-procedure-group-header .car{display:inline-block;transition:transform .15s;color:var(--sub);}
+  .sched-procedure-group-header.open .car{transform:rotate(90deg);}
+  .sched-procedure-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .sched-procedure-chips.collapsed{display:none;}
+  .sched-procedure-group-flat .sched-procedure-chips{margin-top:0;}
+  .sched-procedure-chip{
+    padding:7px 12px;border-radius:999px;border:1.5px solid var(--line);background:#fff;
+    font-size:12.5px;font-weight:700;color:var(--ink);cursor:pointer;
+  }
+  .sched-procedure-chip.active{background:var(--blue);border-color:var(--blue);color:#fff;}
   .sched-form-actions{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap;}
   .sched-btn{
     flex:1;padding:13px;border-radius:10px;border:none;font-size:14.5px;font-weight:800;cursor:pointer;min-width:120px;
@@ -642,7 +660,7 @@
     <span class="legend-item"><span class="legend-dot" style="background:var(--longstay-bg);border:1.5px solid var(--longstay)"></span>長期入院注意</span>
     <span class="legend-item"><span class="legend-dot" style="background:#6b7280"></span>個室希望(2人部屋で空き待ち)</span>
     <!-- 更新確認用: iPadから内容を差し替えたとき、この日付が変わっていれば新しい版が反映されている -->
-    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-08-16j</span></span>
+    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-08-16l</span></span>
   </div>
 
   <!-- メイン(タブごとに表示を切り替える) -->
@@ -713,8 +731,9 @@
           <input type="text" id="schedName" placeholder="例: 山田 太郎">
         </div>
         <div class="sched-form-row">
-          <label>年齢(任意)</label>
-          <input type="number" id="schedAge" min="0" max="120">
+          <label>生年月日(任意)</label>
+          <input type="date" id="schedBirthdate">
+          <div class="sched-hint" id="schedAgeHint"></div>
         </div>
       </div>
 
@@ -724,6 +743,15 @@
           <button type="button" class="sched-toggle-btn active" data-gender="m">男</button>
           <button type="button" class="sched-toggle-btn" data-gender="f">女</button>
         </div>
+      </div>
+
+      <div class="sched-form-row">
+        <label>感染症の有無</label>
+        <div class="sched-toggle-row" id="schedInfectionToggle">
+          <button type="button" class="sched-toggle-btn active" data-infection="none">無</button>
+          <button type="button" class="sched-toggle-btn" data-infection="positive">有</button>
+        </div>
+        <input type="text" id="schedInfectionDetail" placeholder="例: MRSA(病名等を記入)" style="display:none;margin-top:8px;">
       </div>
 
       <div class="sched-form-row">
@@ -745,25 +773,30 @@
         <div class="sched-hint" id="schedAdmissionHint"></div>
       </div>
 
+      <!-- 執刀医と術式の入力順を入れ替え(2026-08-23)。執刀医をタップすると、その医師が
+           担当する術式の一覧(#schedProcedurePicker)が表示され、タップして術式欄に反映できる。 -->
       <div class="sched-form-row">
-        <label>術式(自由記述)</label>
+        <label>執刀医</label>
+        <div class="sched-toggle-row" id="schedSurgeonToggle">
+          <button type="button" class="sched-toggle-btn active" data-surgeon="">未定</button>
+          <button type="button" class="sched-toggle-btn" data-surgeon="masuda">増田</button>
+          <button type="button" class="sched-toggle-btn" data-surgeon="konishi">小西</button>
+          <button type="button" class="sched-toggle-btn" data-surgeon="doi">土井口</button>
+          <button type="button" class="sched-toggle-btn" data-surgeon="honda">本田</button>
+          <button type="button" class="sched-toggle-btn" data-surgeon="other">その他</button>
+        </div>
+      </div>
+
+      <div class="sched-form-row" id="schedProcedurePicker" style="display:none;"></div>
+
+      <div class="sched-form-row">
+        <label>術式(自由記述。上の一覧から選ぶと自動入力されます)</label>
         <input type="text" id="schedProcedure" placeholder="例: 左膝関節鏡">
       </div>
 
-      <div class="sched-form-grid2">
-        <div class="sched-form-row">
-          <label>執刀医(任意)</label>
-          <select id="schedSurgeon">
-            <option value="">未定</option>
-            <option value="doi">土井口Dr</option>
-            <option value="konishi">小西Dr</option>
-            <option value="other">その他</option>
-          </select>
-        </div>
-        <div class="sched-form-row">
-          <label>退院目安(入院日から何泊)</label>
-          <input type="number" id="schedLosNights" min="0" max="60">
-        </div>
+      <div class="sched-form-row">
+        <label>退院目安(入院日から何泊)</label>
+        <input type="number" id="schedLosNights" min="0" max="60">
       </div>
 
       <div class="sched-form-row">
@@ -1080,21 +1113,67 @@ function fmt(d){
 }
 
 /* =========================================================
+   執刀医マスタ・執刀医ごとの担当術式一覧(2026-08-23追加、spec.md 13.10)
+   既存データとの互換性のため、内部IDは土井口="doi"・小西="konishi"のまま維持している。
+   担当術式は利用者からの回答をそのまま反映。増田Drのみ部位数が多いため、
+   フォーム側では部位ごとに折りたたんで表示する(collapse:true)。
+   各部位の最後にある「その他」は、一覧に無い術式の場合の自由記述への切り替え用。
+   ========================================================= */
+const SURGEON_META = {
+  masuda:  { label:"増田Dr",   color:"#7c3aed" },
+  konishi: { label:"小西Dr",   color:"#16a34a" },
+  doi:     { label:"土井口Dr", color:"#2563eb" },
+  honda:   { label:"本田Dr",   color:"#ea580c" },
+  other:   { label:"執刀医その他", color:"#6b7280" },
+};
+const SURGEON_PROCEDURES = {
+  masuda: {
+    collapse: true,
+    groups: [
+      { part:"膝",     procedures:["TKA","UKA","TCVO","関節鏡(縫合)","関節鏡(切除)","coolife"] },
+      { part:"股関節", procedures:["THA","BHA","γ-nail","CHS"] },
+      { part:"骨接合術", procedures:["橈骨遠位端骨折","足関節","その他"] },
+      { part:"手の外科", procedures:["手根管症候群","腱鞘切開術","肘部管症候群","滑膜切除","関節形成術","その他"] },
+    ],
+  },
+  konishi: {
+    collapse: false,
+    groups: [
+      { part:"脊椎", procedures:["LOVE","除圧","固定","その他"] },
+    ],
+  },
+  doi: {
+    collapse: false,
+    groups: [
+      { part:"股関節", procedures:["THA","CPO","BHA","γ-nail","その他"] },
+    ],
+  },
+  honda: {
+    collapse: false,
+    groups: [
+      { part:"手の外科", procedures:["手根管症候群","腱鞘切開術","肘部管症候群","滑膜切除","関節形成術","人工関節","その他"] },
+    ],
+  },
+  // "other"(執刀医その他)は担当術式一覧を持たず、術式欄への自由記述のみとする
+};
+
+/* =========================================================
    入院予定一覧 (spec.md 4.4)
    2026-08-16 手術予定表(ホワイトボード)より登録した実データ(SCHEDULED_ADMISSIONS)を
    入院日が近い順に表示する。あわせて、現在入院中の患者一覧を参考として下に表示する
    (退院前の患者の入院状況を振り返る用途。将来的には統合予定)。
    ========================================================= */
 function scheduledSurgeonBadge(s){
-  if(s.surgeon === "doi") return `<span class="badge" style="background:#2563eb;">土井口Dr</span>`;
-  if(s.surgeon === "konishi") return `<span class="badge" style="background:#16a34a;">小西Dr</span>`;
-  return "";
+  const meta = SURGEON_META[s.surgeon];
+  if(!meta || s.surgeon === "other") return "";
+  return `<span class="badge" style="background:${meta.color};">${meta.label}</span>`;
 }
 function scheduledFlagBadges(s){
   let html = "";
   if(s.tentative) html += `<span class="badge" style="background:#ca8a04;">仮予定</span>`;
   if(s.ruleNote) html += `<span class="badge longstay">⚠️ 入院区分要確認</span>`;
   if(s.genderNote) html += `<span class="badge longstay">⚠️ 性別要確認</span>`;
+  if(s.infectionStatus === "positive") html += `<span class="badge infect">感染症あり${s.infectionDetail ? "("+s.infectionDetail+")" : ""}</span>`;
   return html;
 }
 function scheduledAdmissionCardHTML(s){
@@ -1178,18 +1257,13 @@ function renderAdmissions(){
 
   container.innerHTML = html;
 
-  document.getElementById("schedAddBtn").addEventListener("click", () => openSchedForm(null));
-  container.querySelectorAll(".list-card.clickable").forEach(el => {
-    el.addEventListener("click", () => {
-      const s = SCHEDULED_ADMISSIONS.find(x => x.id === el.dataset.schedId);
-      if(s) openSchedForm(s);
-    });
-  });
+  wireSchedAddButton("schedAddBtn");
+  wireSchedCardClicks(container);
   const toggleBtn = document.getElementById("schedCancelledToggle");
   if(toggleBtn){
     toggleBtn.addEventListener("click", () => {
       showCancelledScheduled = !showCancelledScheduled;
-      renderAdmissions();
+      refreshScheduledDependentViews();
     });
   }
 }
@@ -1210,8 +1284,12 @@ let schedEditingId = null; // null = 新規登録モード
 const schedFormModal = document.getElementById("schedFormModal");
 const schedGenderToggle = document.getElementById("schedGenderToggle");
 const schedRuleToggle = document.getElementById("schedRuleToggle");
+const schedInfectionToggle = document.getElementById("schedInfectionToggle");
+const schedSurgeonToggle = document.getElementById("schedSurgeonToggle");
 let schedGenderValue = "m";
 let schedRuleValue = "dayBefore";
+let schedInfectionValue = "none";
+let schedSurgeonValue = "";
 
 const SCHED_DEFAULT_LOS = { sameDay: 3, dayBefore: 15 };
 
@@ -1233,11 +1311,12 @@ function resetSchedPhoto(){
 
 function resetSchedForm(){
   document.getElementById("schedName").value = "";
-  document.getElementById("schedAge").value = "";
+  document.getElementById("schedBirthdate").value = "";
+  document.getElementById("schedAgeHint").textContent = "";
   document.getElementById("schedSurgeryDate").value = "";
   document.getElementById("schedAdmissionDate").value = "";
   document.getElementById("schedProcedure").value = "";
-  document.getElementById("schedSurgeon").value = "";
+  document.getElementById("schedInfectionDetail").value = "";
   const losInput = document.getElementById("schedLosNights");
   losInput.value = SCHED_DEFAULT_LOS.dayBefore;
   delete losInput.dataset.touched;
@@ -1248,7 +1327,34 @@ function resetSchedForm(){
   resetSchedPhoto();
   setSchedGenderUI("m");
   setSchedRuleUI("dayBefore");
+  setSchedInfectionUI("none");
+  setSchedSurgeonUI("");
 }
+
+// 生年月日(2026-08-23追加、spec.md 13.10①)から本日(TODAY)時点の年齢を計算する。
+// 生年月日は任意項目のため未入力もあり得る。
+function calcAgeFromBirthdate(birthdateStr){
+  if(!birthdateStr) return null;
+  const bd = new Date(birthdateStr + "T00:00:00");
+  const td = new Date(TODAY + "T00:00:00");
+  let age = td.getFullYear() - bd.getFullYear();
+  const m = td.getMonth() - bd.getMonth();
+  if(m < 0 || (m === 0 && td.getDate() < bd.getDate())) age--;
+  return age;
+}
+// fallbackAge: 生年月日が未登録の既存データ(旧「年齢」欄のみのデータ)を編集する際に表示する参考値
+function updateSchedAgeHint(fallbackAge){
+  const birthdate = document.getElementById("schedBirthdate").value;
+  const hint = document.getElementById("schedAgeHint");
+  if(birthdate){
+    hint.textContent = `年齢: ${calcAgeFromBirthdate(birthdate)}歳(本日${fmt(TODAY)}時点)`;
+  } else if(fallbackAge != null){
+    hint.textContent = `年齢: ${fallbackAge}歳(生年月日は未登録のため参考値)`;
+  } else {
+    hint.textContent = "";
+  }
+}
+document.getElementById("schedBirthdate").addEventListener("change", () => updateSchedAgeHint());
 
 document.getElementById("schedPhotoBtn").addEventListener("click", () => {
   document.getElementById("schedPhotoInput").click();
@@ -1275,6 +1381,73 @@ function setSchedGenderUI(v){
 function setSchedRuleUI(v){
   schedRuleValue = v;
   schedRuleToggle.querySelectorAll(".sched-toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.rule === v));
+}
+function setSchedInfectionUI(v){
+  schedInfectionValue = v;
+  schedInfectionToggle.querySelectorAll(".sched-toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.infection === v));
+  document.getElementById("schedInfectionDetail").style.display = v === "positive" ? "" : "none";
+}
+function setSchedSurgeonUI(v){
+  schedSurgeonValue = v;
+  schedSurgeonToggle.querySelectorAll(".sched-toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.surgeon === v));
+  renderProcedurePicker(v);
+}
+
+// 執刀医ごとの担当術式ピッカー(2026-08-23追加、spec.md 13.10)。
+// 増田Drのみ部位数が多いため部位ごとに折りたたみ表示(collapse:true)、他は部位1つのみなので
+// 折りたたまず一覧をそのまま表示する。「その他」チップは術式欄を空にして自由記述に切り替える。
+function renderProcedurePicker(surgeonId){
+  const container = document.getElementById("schedProcedurePicker");
+  const data = SURGEON_PROCEDURES[surgeonId];
+  if(!data){
+    container.style.display = "none";
+    container.innerHTML = "";
+    return;
+  }
+  container.style.display = "";
+  let html = `<div class="sched-procedure-picker-label">${SURGEON_META[surgeonId].label}の担当術式(タップすると下の術式欄に反映されます)</div>`;
+  data.groups.forEach((g, i) => {
+    const chipsHTML = g.procedures.map(p =>
+      `<button type="button" class="sched-procedure-chip" data-proc="${p}">${p}</button>`
+    ).join("");
+    if(data.collapse){
+      html += `
+        <div class="sched-procedure-group">
+          <button type="button" class="sched-procedure-group-header" data-group-toggle="${i}">
+            <span>${g.part}</span><span class="car">▸</span>
+          </button>
+          <div class="sched-procedure-chips collapsed" data-group-chips="${i}">${chipsHTML}</div>
+        </div>`;
+    } else {
+      html += `
+        <div class="sched-procedure-group sched-procedure-group-flat">
+          <div class="sched-procedure-chips" data-group-chips="${i}">${chipsHTML}</div>
+        </div>`;
+    }
+  });
+  container.innerHTML = html;
+
+  container.querySelectorAll("[data-group-toggle]").forEach(header => {
+    header.addEventListener("click", () => {
+      const idx = header.dataset.groupToggle;
+      const chips = container.querySelector(`[data-group-chips="${idx}"]`);
+      const open = header.classList.toggle("open");
+      chips.classList.toggle("collapsed", !open);
+    });
+  });
+  container.querySelectorAll(".sched-procedure-chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      container.querySelectorAll(".sched-procedure-chip").forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      const procInput = document.getElementById("schedProcedure");
+      if(chip.dataset.proc === "その他"){
+        procInput.value = "";
+        procInput.focus();
+      } else {
+        procInput.value = chip.dataset.proc;
+      }
+    });
+  });
 }
 
 // 手術日または入院区分(前日/当日)が変わるたびに、入院日と退院目安泊数のデフォルトを自動再計算する。
@@ -1309,6 +1482,16 @@ schedRuleToggle.addEventListener("click", (e) => {
   setSchedRuleUI(btn.dataset.rule);
   recomputeSchedAdmissionDate();
 });
+schedInfectionToggle.addEventListener("click", (e) => {
+  const btn = e.target.closest(".sched-toggle-btn");
+  if(!btn) return;
+  setSchedInfectionUI(btn.dataset.infection);
+});
+schedSurgeonToggle.addEventListener("click", (e) => {
+  const btn = e.target.closest(".sched-toggle-btn");
+  if(!btn) return;
+  setSchedSurgeonUI(btn.dataset.surgeon);
+});
 
 function openSchedForm(existing){
   resetSchedForm();
@@ -1319,13 +1502,16 @@ function openSchedForm(existing){
 
   if(existing){
     document.getElementById("schedName").value = existing.name || "";
-    document.getElementById("schedAge").value = existing.age || "";
+    document.getElementById("schedBirthdate").value = existing.birthdate || "";
+    updateSchedAgeHint(existing.age);
     setSchedGenderUI(existing.gender || "m");
+    setSchedInfectionUI(existing.infectionStatus || "none");
+    document.getElementById("schedInfectionDetail").value = existing.infectionDetail || "";
     document.getElementById("schedSurgeryDate").value = existing.surgeryDate || "";
     setSchedRuleUI(existing.admissionRule || "dayBefore");
     document.getElementById("schedAdmissionDate").value = existing.admissionDate || "";
+    setSchedSurgeonUI(existing.surgeon || "");
     document.getElementById("schedProcedure").value = existing.procedure || "";
-    document.getElementById("schedSurgeon").value = existing.surgeon || "";
     const losInput = document.getElementById("schedLosNights");
     losInput.value = existing.losNights != null ? existing.losNights : SCHED_DEFAULT_LOS[existing.admissionRule || "dayBefore"];
     losInput.dataset.touched = "1"; // 既存の値を優先し、区分変更で勝手に上書きしない
@@ -1357,11 +1543,22 @@ function saveSchedForm(){
   }
   errEl.textContent = "";
 
-  const ageVal = document.getElementById("schedAge").value;
+  const birthdate = document.getElementById("schedBirthdate").value;
+  let age = null;
+  if(birthdate){
+    age = calcAgeFromBirthdate(birthdate);
+  } else if(schedEditingId){
+    // 生年月日が未入力のまま編集保存された場合、既存の(旧「年齢」欄由来の)年齢があれば維持する
+    const prev = SCHEDULED_ADMISSIONS.find(s => s.id === schedEditingId);
+    if(prev) age = prev.age ?? null;
+  }
   const entry = {
     name,
-    age: ageVal ? parseInt(ageVal, 10) : null,
+    birthdate: birthdate || undefined,
+    age,
     gender: schedGenderValue,
+    infectionStatus: schedInfectionValue,
+    infectionDetail: schedInfectionValue === "positive" ? document.getElementById("schedInfectionDetail").value.trim() : "",
     surgeryDate,
     procedure: document.getElementById("schedProcedure").value.trim() || "(術式未入力)",
     admissionRule: schedRuleValue,
@@ -1369,7 +1566,7 @@ function saveSchedForm(){
     losNights,
     losConfirmed: false,
     dischargeDateEstimate: addDaysISO(admissionDate, losNights),
-    surgeon: document.getElementById("schedSurgeon").value || undefined,
+    surgeon: schedSurgeonValue || undefined,
     tentative: document.getElementById("schedTentative").checked,
   };
 
@@ -1479,23 +1676,41 @@ function renderDischarges(){
 function scheduledSurgeryCardHTML(s){
   const daysUntil = diffDaysISO(TODAY, s.surgeryDate);
   const dayLabel = daysUntil === 0 ? "本日手術" : daysUntil > 0 ? `${daysUntil}日後に予定` : `術後${-daysUntil}日`;
+  const cancelled = !!s.cancelled;
   return `
-    <div class="list-card">
+    <div class="list-card clickable${cancelled ? " cancelled" : ""}" data-sched-id="${s.id}">
       <div class="gender-tag ${s.gender}">${s.gender === "m" ? "男" : "女"}</div>
       <div class="list-card-body">
         <div class="list-card-top">
           <span class="list-card-name">${s.name}${s.age ? `(${s.age})` : ""}</span>
           <span class="badge obs">${s.procedure}</span>
+          ${cancelled ? `<span class="badge" style="background:#6b7280;">キャンセル済み</span>` : ""}
           ${scheduledSurgeonBadge(s)}
-          ${scheduledFlagBadges(s)}
+          ${cancelled ? "" : scheduledFlagBadges(s)}
         </div>
         <div class="list-card-meta">${fmt(s.surgeryDate)}(${dayLabel})</div>
       </div>
     </div>`;
 }
+// 新規予定入院登録フォーム(#schedFormModal)を開くボタンと、予定カードのタップ編集を、
+// 入院予定タブ・手術予定タブの両方で使い回すための共通配線(2026-08-23追加)。
+// 登録内容は手術日・術式もまとめて含むため、どちらのタブから登録・編集しても同じデータを扱う。
+function wireSchedAddButton(id){
+  const btn = document.getElementById(id);
+  if(btn) btn.addEventListener("click", () => openSchedForm(null));
+}
+function wireSchedCardClicks(container){
+  container.querySelectorAll(".list-card.clickable").forEach(el => {
+    el.addEventListener("click", () => {
+      const s = SCHEDULED_ADMISSIONS.find(x => x.id === el.dataset.schedId);
+      if(s) openSchedForm(s);
+    });
+  });
+}
 function renderSurgeries(){
   const container = document.getElementById("view-surgeries");
-  const scheduledRows = [...activeScheduledAdmissions()].sort((a, b) => a.surgeryDate.localeCompare(b.surgeryDate));
+  const visibleScheduled = showCancelledScheduled ? SCHEDULED_ADMISSIONS : activeScheduledAdmissions();
+  const scheduledRows = [...visibleScheduled].sort((a, b) => a.surgeryDate.localeCompare(b.surgeryDate));
 
   const currentRows = beds
     .filter(b => b.patient && b.surgeryType)
@@ -1505,12 +1720,18 @@ function renderSurgeries(){
   let html = `
     <div class="room-section-head">
       <div class="room-section-title">手術予定一覧(手術予定表より登録)</div>
-      <div class="room-section-note">手術日が近い順に表示</div>
+      <div class="room-section-note">手術日が近い順に表示。カードをタップすると編集・キャンセルできます</div>
     </div>
+    <button type="button" class="sched-add-btn" id="schedAddBtnSurgeries">＋ 新規予定入院を登録</button>
   `;
   html += scheduledRows.length
     ? scheduledRows.map(scheduledSurgeryCardHTML).join("")
     : `<div class="list-empty">登録済みの予定手術はありません。</div>`;
+
+  const cancelledCount = SCHEDULED_ADMISSIONS.filter(s => s.cancelled).length;
+  if(cancelledCount > 0){
+    html += `<button type="button" class="sched-cancelled-toggle" id="schedCancelledToggleSurgeries">${showCancelledScheduled ? "キャンセル済みを隠す" : `キャンセル済みを表示(${cancelledCount}件)`}</button>`;
+  }
 
   html += `
     <div class="room-section-head" style="margin-top:18px;">
@@ -1538,6 +1759,16 @@ function renderSurgeries(){
     : `<div class="list-empty">現在、表示できる手術情報がありません。</div>`;
 
   container.innerHTML = html;
+
+  wireSchedAddButton("schedAddBtnSurgeries");
+  wireSchedCardClicks(container);
+  const toggleBtnSurgeries = document.getElementById("schedCancelledToggleSurgeries");
+  if(toggleBtnSurgeries){
+    toggleBtnSurgeries.addEventListener("click", () => {
+      showCancelledScheduled = !showCancelledScheduled;
+      refreshScheduledDependentViews();
+    });
+  }
 }
 
 function render(){
