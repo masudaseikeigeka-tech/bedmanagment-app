@@ -386,9 +386,8 @@
     display:flex;align-items:center;justify-content:center;
     font-size:22px;font-weight:900;color:#fff;
   }
-  .role-head_nurse{background:var(--blue);}
-  .role-leader_nurse{background:#0891b2;}
   .role-doctor{background:#7c3aed;}
+  .role-nurse{background:var(--blue);}
   .role-clerk{background:#059669;}
   .login-user-name{font-size:15px;font-weight:800;color:var(--ink);}
   .login-user-role{font-size:11.5px;color:var(--sub);}
@@ -399,27 +398,17 @@
   .login-pin-label{text-align:center;}
   .login-pin-label .name{font-size:15px;font-weight:800;}
   .login-pin-label .hint{font-size:12px;color:var(--sub);margin-top:2px;}
-  .pin-dots{display:flex;gap:12px;}
-  .pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);background:transparent;}
-  .pin-dot.filled{border-color:var(--blue);background:var(--blue);}
-  .pin-dot.error{border-color:var(--delay);background:var(--delay);}
-  .pin-dots.shake{animation:pin-shake .4s;}
-  @keyframes pin-shake{
-    0%,100%{transform:translateX(0);}
-    20%{transform:translateX(-8px);}
-    40%{transform:translateX(8px);}
-    60%{transform:translateX(-6px);}
-    80%{transform:translateX(6px);}
+  /* 役割選択→お名前(ID)入力方式のログイン(2026-08-23、spec.md 13.11) */
+  .login-id-input{
+    width:240px;max-width:80vw;padding:13px 14px;font-size:16px;text-align:center;
+    border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-family:inherit;
   }
-  .login-fail-msg{max-width:280px;background:#fff7e6;color:#b45309;font-size:12px;font-weight:800;text-align:center;padding:10px 14px;border-radius:10px;}
-  .pin-keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-  .pin-key{
-    width:60px;height:60px;border-radius:16px;
-    border:1px solid var(--line);background:#fff;
-    font-size:20px;font-weight:800;cursor:pointer;
+  .login-id-input:focus{border-color:var(--blue);outline:none;}
+  .login-id-error{color:var(--delay);font-size:12px;font-weight:800;}
+  .login-id-submit{
+    width:240px;max-width:80vw;padding:13px;border-radius:12px;border:none;
+    background:var(--blue);color:#fff;font-size:15px;font-weight:800;cursor:pointer;
   }
-  .pin-key.sub{font-size:11px;font-weight:800;color:var(--sub);}
-  .login-demo-note{font-size:10.5px;color:#c4c9d1;}
 
   /* ---------- 共有iPad用ヘッダー(ログイン中の職員表示・切替) ---------- */
   .app-header{
@@ -590,22 +579,36 @@
       <div class="login-title">増田整形外科</div>
       <div class="login-sub">病床管理システム</div>
     </div>
-    <div class="login-instruction" style="margin-bottom:16px;">ご自身の名前をタップしてください</div>
-    <div class="login-grid" id="loginUserGrid"></div>
+    <div class="login-instruction" style="margin-bottom:16px;">ご自身の役割をタップしてください</div>
+    <div class="login-grid" id="loginRoleGrid">
+      <button class="login-user-btn" data-role="doctor">
+        <div class="login-avatar-circle role-doctor">医</div>
+        <div class="login-user-name">医師</div>
+      </button>
+      <button class="login-user-btn" data-role="nurse">
+        <div class="login-avatar-circle role-nurse">看</div>
+        <div class="login-user-name">看護師</div>
+      </button>
+      <button class="login-user-btn" data-role="clerk">
+        <div class="login-avatar-circle role-clerk">ク</div>
+        <div class="login-user-name">クラーク</div>
+      </button>
+    </div>
   </div>
 
-  <div id="loginPinStep" class="login-pin" style="display:none;">
-    <button class="login-back" id="loginBackBtn">← 職員選択に戻る</button>
-    <div class="login-avatar" id="loginPinAvatar"></div>
+  <!-- 役割選択後、お名前(ID)をご自身で入力してログインする(2026-08-23、spec.md 13.11)。
+       PINは廃止。同じタブレットでも次回は毎回空欄から入力する(誤って前の人のまま操作しない
+       ようにするため)。 -->
+  <div id="loginIdStep" class="login-pin" style="display:none;">
+    <button class="login-back" id="loginIdBackBtn">← 役割選択に戻る</button>
+    <div class="login-avatar" id="loginIdAvatar"></div>
     <div class="login-pin-label">
-      <div class="name" id="loginPinName"></div>
-      <div class="hint" id="loginPinHint">のPINを入力してください</div>
+      <div class="name" id="loginIdRoleName"></div>
+      <div class="hint">お名前を入力してください</div>
     </div>
-    <div class="pin-dots" id="pinDots"></div>
-    <div class="login-fail-msg" id="loginFailMsg" style="display:none;">PINが3回一致しませんでした。ご不明な場合は看護師長にご確認ください。</div>
-    <div class="pin-keypad" id="pinKeypad"></div>
-    <!-- 【仮定・デモ用】実運用前に削除: 本番のPINはこの画面に表示してはならない -->
-    <div class="login-demo-note">デモ用PIN: 1234(本番導入時は要削除)</div>
+    <input type="text" id="loginIdInput" class="login-id-input" placeholder="例: 山田 花子" autocomplete="off">
+    <div class="login-id-error" id="loginIdError" style="display:none;">お名前を入力してください。</div>
+    <button type="button" class="login-id-submit" id="loginIdSubmitBtn">ログイン</button>
   </div>
 </div>
 
@@ -660,7 +663,7 @@
     <span class="legend-item"><span class="legend-dot" style="background:var(--longstay-bg);border:1.5px solid var(--longstay)"></span>長期入院注意</span>
     <span class="legend-item"><span class="legend-dot" style="background:#6b7280"></span>個室希望(2人部屋で空き待ち)</span>
     <!-- 更新確認用: iPadから内容を差し替えたとき、この日付が変わっていれば新しい版が反映されている -->
-    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-08-16l</span></span>
+    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-08-16o</span></span>
   </div>
 
   <!-- メイン(タブごとに表示を切り替える) -->
@@ -993,15 +996,11 @@ const SCHEDULED_ADMISSIONS = SCHEDULED_ADMISSIONS_RAW.map(s => {
 // 職員ごとの個別PIN発行・管理はバックエンド実装後の対応とする。
 // 2026-08-23: 予定入院の登録・編集・キャンセル操作(spec.md 13.3④)に医療クラークの関与が
 // 必要と確認されたため、役割として追加。氏名・人数は未確認のため仮名【要確認】。
-const USERS = [
-  { id:"u-head",    name:"看護師長 佐藤",   role:"head_nurse" },
-  { id:"u-leader",  name:"リーダー看護師 木村", role:"leader_nurse" },
-  { id:"u-doctor1", name:"増田 太郎 医師",   role:"doctor" },
-  { id:"u-doctor2", name:"田中 次郎 医師",   role:"doctor" },
-  { id:"u-clerk1",  name:"医療クラーク(仮)", role:"clerk" },
-];
-const ROLE_LABEL = { head_nurse:"看護師長", leader_nurse:"リーダー看護師", doctor:"医師", clerk:"医療クラーク" };
-const DEMO_PIN = "1234";
+// 2026-08-23: ログインを「職員一覧から選択+共通PIN入力」から「役割(医師/看護師/クラーク)を
+// タップ→お名前(ID)を自分で入力」する方式に変更(spec.md 13.11)。職員が20名超と多く、
+// 一覧から探す手間・共通PINの形骸化を解消するための簡便化。個別PIN・監査ログは将来の
+// バックエンド実装後に別途対応する。
+const ROLE_LABEL = { doctor:"医師", nurse:"看護師", clerk:"クラーク" };
 
 /* =========================================================
    日付ユーティリティ
@@ -2110,112 +2109,63 @@ document.querySelectorAll(".tab").forEach(tab=>{
    院内共有iPadという前提のため、アプリを開くたびに必ずこの画面を経由させる。
    ========================================================= */
 let currentUser = null;
-let loginSelectedUser = null;
-let pinValue = "";
-let pinFailCount = 0;
+let loginSelectedRole = null;
 
 const loginScreen = document.getElementById("loginScreen");
 const loginSelectStep = document.getElementById("loginSelectStep");
-const loginPinStep = document.getElementById("loginPinStep");
-const loginUserGrid = document.getElementById("loginUserGrid");
+const loginIdStep = document.getElementById("loginIdStep");
+const loginRoleGrid = document.getElementById("loginRoleGrid");
+const loginIdInput = document.getElementById("loginIdInput");
 
-function renderLoginUserGrid(){
-  loginUserGrid.innerHTML = USERS.map(u => `
-    <button class="login-user-btn" data-user="${u.id}">
-      <div class="login-avatar-circle role-${u.role}">${u.name.slice(0,1)}</div>
-      <div class="login-user-name">${u.name}</div>
-      <div class="login-user-role">${ROLE_LABEL[u.role]}</div>
-    </button>
-  `).join("");
-  loginUserGrid.querySelectorAll(".login-user-btn").forEach(btn=>{
-    btn.addEventListener("click", ()=>openPinStep(USERS.find(u=>u.id===btn.dataset.user)));
-  });
-}
+loginRoleGrid.querySelectorAll(".login-user-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>openIdStep(btn.dataset.role));
+});
 
-function openPinStep(user){
-  loginSelectedUser = user;
-  pinValue = "";
-  pinFailCount = 0;
-  document.getElementById("loginFailMsg").style.display = "none";
-  const avatar = document.getElementById("loginPinAvatar");
-  avatar.className = `login-avatar role-${user.role}`;
-  avatar.textContent = user.name.slice(0,1);
-  document.getElementById("loginPinName").textContent = user.name;
-  document.getElementById("loginPinHint").textContent = `${ROLE_LABEL[user.role]}のPINを入力してください`;
-  renderPinDots();
+function openIdStep(role){
+  loginSelectedRole = role;
+  loginIdInput.value = ""; // 同じタブレットでも毎回空欄から入力する(前の人のIDが残らないように)
+  document.getElementById("loginIdError").style.display = "none";
+  const avatar = document.getElementById("loginIdAvatar");
+  avatar.className = `login-avatar role-${role}`;
+  avatar.textContent = ROLE_LABEL[role].slice(0,1);
+  document.getElementById("loginIdRoleName").textContent = ROLE_LABEL[role];
   loginSelectStep.style.display = "none";
-  loginPinStep.style.display = "flex";
+  loginIdStep.style.display = "flex";
+  loginIdInput.focus();
 }
 
-document.getElementById("loginBackBtn").addEventListener("click", ()=>{
-  loginPinStep.style.display = "none";
+document.getElementById("loginIdBackBtn").addEventListener("click", ()=>{
+  loginIdStep.style.display = "none";
   loginSelectStep.style.display = "block";
 });
 
-function renderPinDots(){
-  const dots = document.getElementById("pinDots");
-  dots.innerHTML = "";
-  for(let i=0;i<4;i++){
-    const d = document.createElement("span");
-    d.className = "pin-dot" + (i < pinValue.length ? " filled" : "");
-    dots.appendChild(d);
-  }
-}
-
-const PIN_KEYS = ["1","2","3","4","5","6","7","8","9","clear","0","back"];
-const pinKeypad = document.getElementById("pinKeypad");
-pinKeypad.innerHTML = PIN_KEYS.map(k=>{
-  if(k==="clear") return `<button class="pin-key sub" data-key="clear">クリア</button>`;
-  if(k==="back") return `<button class="pin-key sub" data-key="back">⌫</button>`;
-  return `<button class="pin-key" data-key="${k}">${k}</button>`;
-}).join("");
-pinKeypad.addEventListener("click", (e)=>{
-  const btn = e.target.closest(".pin-key");
-  if(!btn) return;
-  const key = btn.dataset.key;
-  if(key === "clear"){ pinValue = ""; renderPinDots(); return; }
-  if(key === "back"){ pinValue = pinValue.slice(0,-1); renderPinDots(); return; }
-  if(pinValue.length >= 4) return;
-  pinValue += key;
-  renderPinDots();
-  if(pinValue.length === 4){
-    setTimeout(checkPin, 150); // 4桁目のタップが見えるよう少し間を置く
-  }
-});
-
-function checkPin(){
-  if(pinValue === DEMO_PIN){
-    currentUser = loginSelectedUser;
-    document.getElementById("currentUserName").textContent = currentUser.name;
-    loginScreen.style.display = "none";
+function submitLoginId(){
+  const name = loginIdInput.value.trim();
+  if(!name){
+    document.getElementById("loginIdError").style.display = "block";
+    loginIdInput.focus();
     return;
   }
-  pinFailCount++;
-  const dots = document.getElementById("pinDots");
-  dots.classList.add("shake");
-  dots.querySelectorAll(".pin-dot").forEach(d=>d.classList.add("error","filled"));
-  setTimeout(()=>{
-    dots.classList.remove("shake");
-    pinValue = "";
-    renderPinDots();
-  }, 400);
-  if(pinFailCount >= 3){
-    document.getElementById("loginFailMsg").style.display = "block";
-  }
+  currentUser = { name, role: loginSelectedRole };
+  document.getElementById("currentUserName").textContent = `${currentUser.name}(${ROLE_LABEL[currentUser.role]})`;
+  loginScreen.style.display = "none";
 }
+document.getElementById("loginIdSubmitBtn").addEventListener("click", submitLoginId);
+loginIdInput.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter") submitLoginId();
+});
+loginIdInput.addEventListener("input", ()=>{
+  document.getElementById("loginIdError").style.display = "none";
+});
 
-// ヘッダーの氏名表示をタップすると職員選択に戻る(=別の職員へ切替。院内共有iPad向け)
+// ヘッダーの氏名表示をタップすると役割選択に戻る(=別の職員へ切替。院内共有iPad向け)
 document.getElementById("logoutBtn").addEventListener("click", ()=>{
   currentUser = null;
-  loginSelectedUser = null;
-  pinValue = "";
-  pinFailCount = 0;
-  loginPinStep.style.display = "none";
+  loginSelectedRole = null;
+  loginIdStep.style.display = "none";
   loginSelectStep.style.display = "block";
   loginScreen.style.display = "flex";
 });
-
-renderLoginUserGrid();
 
 render();
 renderAdmissions();
