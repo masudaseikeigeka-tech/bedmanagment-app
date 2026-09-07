@@ -663,7 +663,7 @@
     <span class="legend-item"><span class="legend-dot" style="background:var(--longstay-bg);border:1.5px solid var(--longstay)"></span>長期入院注意</span>
     <span class="legend-item"><span class="legend-dot" style="background:#6b7280"></span>個室希望(2人部屋で空き待ち)</span>
     <!-- 更新確認用: iPadから内容を差し替えたとき、この日付が変わっていれば新しい版が反映されている -->
-    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-08-16o</span></span>
+    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-09-07a</span></span>
   </div>
 
   <!-- メイン(タブごとに表示を切り替える) -->
@@ -873,7 +873,9 @@
 /* =========================================================
    ダミーデータ(spec.md 7.5 のサンプルデータ構造に準拠した簡易版)
    ========================================================= */
-const TODAY = "2026-08-14";
+// 2026-09-07: 電子カルテ(DAISHIN)の「入院患者一覧」「手術患者一覧」画面の写真をもとに、
+// 実際の本日の日付に更新した(spec.md 13.13)。
+const TODAY = "2026-09-07";
 
 // 「本日入院予定」「本日手術予定」は、本来は現在入院中の患者とは別に管理される
 // 入院予定表・手術予定表から集計すべき値だが、そのデータをお預かりしていないため、
@@ -883,22 +885,27 @@ const TODAY = "2026-08-14";
 
 // 病名(diagnosis)・入院目的・ADLはホワイトボードから読み取れなかった項目のため、
 // 実在の患者名を使いつつ推測で埋めることは避け、必要な箇所は空欄にしています。
+// 2026-09-07更新(spec.md 13.13): 電子カルテ(DAISHIN)の「入院患者一覧」画面の写真をもとに、
+// 実際の現在の入院患者データに総入れ替えした。性別は画面上の文字色(赤=女性/青=男性、本人確認済み)
+// および氏名からの一般的な判断で設定。本浦栄子さん(306号室)のみ、以前から登録していた
+// 同一患者(旧p25)と氏名・部屋が一致するため、そのまま継続扱いとしている。
 const patients = {
-  p7:  {name:"三石 恵子", gender:"f", note:"PT: 真島"},
-  p9:  {name:"吉川 寿",   gender:"m", note:"PT: 持永"},
-  p23: {name:"西山 安公子", gender:"f", note:"PT: 林"},
-  p24: {name:"山本 栄子", gender:"f", note:"PT: 池田"},
-  p25: {name:"本浦 栄子", gender:"f", note:"PT: 中野"},
-  p26: {name:"奥野 春美", gender:"f", note:"PT: 池田(安静入院)"},
-  p27: {name:"吉村 直江", gender:"f", note:"PT: 林(リカバリー室)"},
-  p28: {name:"永尾 登美枝", gender:"f", note:"PT: 川島"},
-  p29: {name:"椿山 昭子", gender:"f", note:"PT: 土井"},
-  p30: {name:"萬屋 福重", gender:"m", note:"PT: 辻"},
-  p31: {name:"豆田 由美子", gender:"f", note:"PT: 林(安静入院)"},
-  p32: {name:"中村 幸子", gender:"f", note:"PT: 土井"},
-  p33: {name:"池田 マサ子", gender:"f", note:"PT: 池田"},
-  p34: {name:"小川 弘昭", gender:"m", note:"PT: 持永"},
-  p35: {name:"東 成子", gender:"f", note:"PT: 川島"},
+  p25: {name:"本浦 栄子",   gender:"f"},
+  p36: {name:"長浦 加奈",   gender:"f"},
+  p37: {name:"末田 まさみ", gender:"f"},
+  p38: {name:"辻 葉子",     gender:"f"},
+  p39: {name:"平岡 義子",   gender:"f"},
+  p40: {name:"武田 美奈",   gender:"f"},
+  p41: {name:"田島 典子",   gender:"f"},
+  p42: {name:"吉武 みさお", gender:"f"},
+  p43: {name:"田中 美智子", gender:"f"},
+  p44: {name:"中村 謙汰",   gender:"m"},
+  p45: {name:"吉岡 周次",   gender:"m"},
+  p46: {name:"山浦 量子",   gender:"f"},
+  p47: {name:"安永 隆夫",   gender:"m"},
+  p48: {name:"田中 恵子",   gender:"f"},
+  p49: {name:"志水 加代",   gender:"f"},
+  p50: {name:"松永 光則",   gender:"m"},
 };
 
 // 手術種別ラベル(カード表示用の略称)。tcvoはホワイトボードの表記をそのまま採用(増田整形外科に確認済み: 標準入院日数10日。傷の治りが悪く退院が延びやすい術式とのこと)。
@@ -910,44 +917,57 @@ const SURGERY_LABEL = { tka:"TKA", tha:"THA", spine:"脊椎", uka:"UKA", arthros
 //   個室13 = 観察室4室(305・306・307・308) + 特室2室(301・320) + 通常個室7室(302,303,313,315,316,317,318)
 // リカバリー室は19床の集計に含まない(307と308の間に位置)
 // bed定義: id, room(表示名), type(general/private/obs/special/recovery), status, patientKey, extra
+//
+// 2026-09-07更新(spec.md 13.13): 電子カルテの「入院患者一覧」「手術患者一覧」画面の写真をもとに
+// 総入れ替え。手術情報(術式・手術日・執刀医)は、①手術患者一覧の写真と氏名が一致した患者(長浦・
+// 末田・辻・平岡・松永)、②以前の手術予定表(ホワイトボード)からの登録データと氏名・入院日が
+// 一致した患者(吉武・田中美智子・山浦・田中恵子・志水、いずれも当時の予定入院登録から実現)の
+// 10名のみ判明しており反映済み。残り5名(武田・田島・中村・吉岡・安永)は今回の写真の範囲に手術情報が無かったため
+// 「未定(手術情報未登録・要確認)」としている(次回の手術予定表・入院患者一覧の写真で判明次第、追記予定)。
 const beds = [
-  // 特室 301(三石さんはUKA術後・LOSは仮定14日)
-  {id:"301", room:"301", type:"special", status:"occupied", patient:"p7", los:"入院12日目", discharge:"2026-08-17", surgeryType:"uka", surgeryDate:"2026-08-03"},
-  // 個室 302(西山さんはTKA術後2日目。観察室ではなく通常個室のため要注意)
-  {id:"302", room:"302", type:"private", status:"occupied", patient:"p23", los:"入院3日目", discharge:"2026-08-26", surgeryType:"tka", surgeryDate:"2026-08-12", obsWarning:true},
-  // 個室 303(吉川さんは関節鏡術後2日目・PT持永。302と同様、観察室ではなく通常個室のため要注意)
-  {id:"303", room:"303", type:"private", status:"occupied", patient:"p9", los:"入院3日目", discharge:"2026-08-17", surgeryType:"arthroscopy", surgeryDate:"2026-08-12", obsWarning:true},
+  // 特室 301・個室302: 今回の入院患者一覧には該当者が無かったため空床(以前の患者は退院済みと判断)
+  {id:"301", room:"301", type:"special", status:"vacant"},
+  {id:"302", room:"302", type:"private", status:"vacant"},
+  // 個室 303(長浦さんは手術患者一覧と氏名が一致)
+  {id:"303", room:"303", type:"private", status:"occupied", patient:"p36", los:"入院5日目", discharge:"2026-09-09(推定・要確認)", surgeryType:"other", surgeryDate:"2026-09-04", reason:"左足関節外果骨接合+左第5中足骨接合(骨接合術のため標準入院日数は暫定値)"},
 
   // 観察室 305-308(ナースステーション前。平常時は個室として運用し、術後2日目までの患者を優先収容) + リカバリー室
-  {id:"305", room:"305", type:"obs", status:"obs", patient:"p24", los:"入院3日目", discharge:"2026-08-17", postOpDay:"術後2日目", surgeryType:"arthroscopy", surgeryDate:"2026-08-12"},
-  {id:"306", room:"306", type:"obs", status:"infect", patient:"p25", los:"入院142日目", discharge:"未定(感染治療継続中)", longStayFlag:true, reason:"3/26 TKA後の感染により長期治療中(要確認)", surgeryType:"tka", surgeryDate:"2026-03-26"},
-  {id:"307", room:"307", type:"obs", status:"occupied", patient:"p26", los:"入院3日目", discharge:"2026-08-23", reason:"安静入院(手術なし)"},
-  // リカバリー室(本来は日帰り手術後の一時回復用だが、8/13〜8/16休診でベッドに余裕があるため
-  // この期間は長期入院患者の受け入れにも使う運用としていることを増田整形外科に確認済み)
-  {id:"RCV", room:"リカバリー室", type:"recovery", status:"occupied", patient:"p27", los:"入院14日目", discharge:"要確認(休診期間中の特別運用)", isRecovery:true, surgeryType:"tka", surgeryDate:"2026-08-01"},
-  {id:"308", room:"308", type:"obs", status:"vacant"},
+  {id:"305", room:"305", type:"obs", status:"vacant"},
+  // 306号室 本浦栄子さんは以前からの登録患者と氏名・部屋が一致(継続扱い)。入院日を電子カルテの
+  // 表示(2026-03-25)に合わせて更新。感染欄は今回の写真では空欄だったが、以前「3/26 TKA後の感染」
+  // という申し送りがあったため、治癒したか要確認として長期入院フラグは維持している。
+  {id:"306", room:"306", type:"obs", status:"longstay", patient:"p25", los:"入院167日目", discharge:"未定(要確認)", longStayFlag:true, reason:"入院日2026-03-25。以前「3/26 TKA後の感染により長期治療中」との申し送りがあったが、直近の入院患者一覧では感染欄が空欄だったため、治癒したかどうかは要確認", surgeryType:"tka", surgeryDate:"2026-03-25"},
+  // 末田さん・平岡さんは手術日(9/5)が本日(9/7)の2日前のため、観察室に収容(術後2日目の運用ルール通り)
+  {id:"307", room:"307", type:"obs", status:"obs", patient:"p37", los:"入院4日目", discharge:"2026-09-19", postOpDay:"術後2日目", surgeryType:"tha", surgeryDate:"2026-09-05"},
+  {id:"308", room:"308", type:"obs", status:"obs", patient:"p39", los:"入院4日目", discharge:"2026-09-19", postOpDay:"術後2日目", surgeryType:"tha", surgeryDate:"2026-09-05"},
+  // リカバリー室(辻さんは手術患者一覧と氏名が一致。手術は9/8予定でまだ未実施のため、入院済みだが
+  // 手術待機中というステータス。標準入院日数は手術日(9/8)を起点に計算している)
+  {id:"RCV", room:"リカバリー室", type:"recovery", status:"occupied", patient:"p38", los:"入院4日目", discharge:"2026-09-22", isRecovery:true, surgeryType:"tka", surgeryDate:"2026-09-08", reason:"手術待機中(9/8予定、手術はまだ実施していない)"},
 
-  // 一般床(2人部屋) 310-312(全員実名に更新)
-  {id:"310-A", room:"310", type:"general", status:"occupied", patient:"p28", los:"入院9日目", discharge:"2026-08-20", surgeryType:"tka", surgeryDate:"2026-08-06"},
-  // TCVOはホワイトボード表記をそのまま採用。標準入院日数10日は確認済みだが、傷の治りが悪く延びやすいとのこと
-  {id:"310-B", room:"310", type:"general", status:"occupied", patient:"p29", los:"入院10日目", discharge:"2026-08-15", surgeryType:"tcvo", surgeryDate:"2026-08-05"},
-  {id:"311-A", room:"311", type:"general", status:"vacant"},
-  // 萬屋さんは標準入院日数(14日)の目安を超えているが、実際の退院予定日はホワイトボードに記載がないため「要確認」表示(遅延と断定しない)
-  // 萬屋さんは確認済み: リハビリ遅延により退院延期中(通常は転院となる症例)
-  {id:"311-B", room:"311", type:"general", status:"longstay", patient:"p30", los:"入院16日目", discharge:"2026-08-21(延期・要再確認)", reason:"リハビリ遅延により退院延期中(通常は転院となる症例)", surgeryType:"tka", surgeryDate:"2026-07-30"},
-  {id:"312-A", room:"312", type:"general", status:"occupied", patient:"p31", los:"入院12日目", discharge:"2026-08-14", reason:"安静入院(手術なし)"},
-  {id:"312-B", room:"312", type:"general", status:"occupied", patient:"p32", los:"入院5日目", discharge:"2026-08-24", surgeryType:"uka", surgeryDate:"2026-08-10"},
+  // 一般床(2人部屋) 310-312(全員今回の入院患者一覧より実名に更新。311号室の2名は以前の予定入院登録と
+  // 一致し手術情報が判明。310・312号室の4名は手術情報未判明)
+  {id:"310-A", room:"310", type:"general", status:"occupied", patient:"p40", los:"入院7日目", discharge:"未定(手術情報未登録・要確認)"},
+  {id:"310-B", room:"310", type:"general", status:"occupied", patient:"p41", los:"入院18日目", discharge:"未定(手術情報未登録・要確認)", longStayFlag:true},
+  // 311号室 吉武さん・田中美智子さんは、以前の手術予定表(ホワイトボード)からの予定入院登録と
+  // 氏名・入院日が一致(いずれも8/29のTKA、前日入院ルール通り8/28入院)。実現したため、
+  // 予定入院一覧(SCHEDULED_ADMISSIONS)からは該当エントリを外している。
+  {id:"311-A", room:"311", type:"general", status:"occupied", patient:"p42", los:"入院11日目", discharge:"2026-09-12", surgeryType:"tka", surgeryDate:"2026-08-29"},
+  {id:"311-B", room:"311", type:"general", status:"occupied", patient:"p43", los:"入院11日目", discharge:"2026-09-12", surgeryType:"tka", surgeryDate:"2026-08-29"},
+  {id:"312-A", room:"312", type:"general", status:"occupied", patient:"p44", los:"入院7日目", discharge:"未定(手術情報未登録・要確認)"},
+  {id:"312-B", room:"312", type:"general", status:"occupied", patient:"p45", los:"入院7日目", discharge:"未定(手術情報未登録・要確認)"},
 
   // 個室 313, 315-318
-  // 池田さんも標準入院日数の目安を超えているため「要確認」表示
-  // 池田さんも確認済み: リハビリ遅延により退院延期中(通常は転院となる症例)
-  {id:"313", room:"313", type:"private", status:"longstay", patient:"p33", los:"入院17日目", discharge:"2026-08-19(延期・要再確認)", reason:"リハビリ遅延により退院延期中(通常は転院となる症例)", surgeryType:"tka", surgeryDate:"2026-07-29"},
-  {id:"315", room:"315", type:"private", status:"occupied", patient:"p34", los:"入院14日目", discharge:"2026-08-15", surgeryType:"tka", surgeryDate:"2026-08-01"},
-  {id:"316", room:"316", type:"private", status:"vacant"},
-  {id:"317", room:"317", type:"private", status:"occupied", patient:"p35", los:"入院10日目", discharge:"2026-08-19", surgeryType:"tha", surgeryDate:"2026-08-05"},
-  {id:"318", room:"318", type:"private", status:"vacant"},
+  {id:"313", room:"313", type:"private", status:"occupied", patient:"p47", los:"入院12日目", discharge:"未定(手術情報未登録・要確認)"},
+  // 315号室 田中恵子さんも、以前の予定入院登録(8/26 右UKA、前日入院で8/25入院)と氏名・入院日が一致
+  {id:"315", room:"315", type:"private", status:"occupied", patient:"p48", los:"入院14日目", discharge:"2026-09-09", surgeryType:"uka", surgeryDate:"2026-08-26"},
+  // 316号室 志水加代さんも、以前の予定入院登録(8/27 左TKA、前日入院で8/26入院)と氏名・入院日が一致
+  {id:"316", room:"316", type:"private", status:"occupied", patient:"p49", los:"入院13日目", discharge:"2026-09-10", surgeryType:"tka", surgeryDate:"2026-08-27"},
+  // 317号室 山浦さんも以前の予定入院登録(8/26 TKA、前日入院で8/25入院)と一致し実現。
+  {id:"317", room:"317", type:"private", status:"occupied", patient:"p46", los:"入院14日目", discharge:"2026-09-09", surgeryType:"tka", surgeryDate:"2026-08-26"},
+  // 318号室 松永さんは手術患者一覧と氏名が一致(左UKA)
+  {id:"318", room:"318", type:"private", status:"occupied", patient:"p50", los:"入院6日目", discharge:"2026-09-17", surgeryType:"uka", surgeryDate:"2026-09-03"},
 
-  // 特室 320
+  // 特室 320: 今回の入院患者一覧には該当者が無かったため空床
   {id:"320", room:"320", type:"special", status:"vacant"},
 ];
 
@@ -967,6 +987,9 @@ const beds = [
    genderNote:true = 性別を氏名から推測しており未確認の件。
    tentative:true = ホワイトボード上で「(仮)」と付記されていた、仮予約中の枠。
    ========================================================= */
+// 2026-09-07: 田中恵子(旧sa09)・山浦量子(旧sa10)・志水加代(旧sa12)・吉武みさお(旧sa13)・
+// 田中美智子(旧sa14)の5件は、電子カルテの入院患者一覧で氏名・入院日が一致し実際に入院済みと
+// 確認できたため、予定入院一覧から削除しbeds[]側に反映した(spec.md 13.13)。
 const SCHEDULED_ADMISSIONS_RAW = [
   {id:"sa01", name:"嶋原 知一",   age:50,  gender:"m", surgeryDate:"2026-08-20", procedure:"左膝関節鏡",            admissionRule:"sameDay",  losNights:5,  losConfirmed:false},
   {id:"sa02", name:"福田 直樹",   age:51,  gender:"m", surgeryDate:"2026-08-20", procedure:"両膝クーリーフ",          admissionRule:"sameDay",  losNights:3,  losConfirmed:true},
@@ -976,12 +999,7 @@ const SCHEDULED_ADMISSIONS_RAW = [
   {id:"sa06", name:"三輪 弘",     age:86,  gender:"m", surgeryDate:"2026-08-22", procedure:"右膝関節鏡",            admissionRule:"sameDay",  losNights:5,  losConfirmed:false},
   {id:"sa07", name:"石山 清美",   age:null, gender:"f", surgeryDate:"2026-08-25", procedure:"右橈骨抜釘",             admissionRule:"sameDay",  losNights:3,  losConfirmed:false, ruleNote:true},
   {id:"sa08", name:"福田 朋子",   age:65,  gender:"f", surgeryDate:"2026-08-25", procedure:"左膝クーリーフ",          admissionRule:"sameDay",  losNights:2,  losConfirmed:false},
-  {id:"sa09", name:"田中 恵子",   age:null, gender:"f", surgeryDate:"2026-08-26", procedure:"右UKA",                 admissionRule:"dayBefore", losNights:15, losConfirmed:false},
-  {id:"sa10", name:"山浦 量子",   age:67,  gender:"f", surgeryDate:"2026-08-26", procedure:"左TKA",                 admissionRule:"dayBefore", losNights:15, losConfirmed:false},
   {id:"sa11", name:"尾崎 美千代", age:55,  gender:"f", surgeryDate:"2026-08-26", procedure:"除圧固定(L4/5)",         admissionRule:"dayBefore", losNights:15, losConfirmed:false, surgeon:"konishi"},
-  {id:"sa12", name:"志水 加代",   age:72,  gender:"f", surgeryDate:"2026-08-27", procedure:"左TKA(BCR、ACL次第でCR)", admissionRule:"dayBefore", losNights:15, losConfirmed:false},
-  {id:"sa13", name:"吉武 みさお", age:80,  gender:"f", surgeryDate:"2026-08-29", procedure:"左TKA",                 admissionRule:"dayBefore", losNights:15, losConfirmed:false, tentative:true},
-  {id:"sa14", name:"田中 美智子", age:53,  gender:"f", surgeryDate:"2026-08-29", procedure:"左TKA",                 admissionRule:"dayBefore", losNights:15, losConfirmed:false, surgeon:"doi"},
   {id:"sa15", name:"内本 明子",   age:54,  gender:"f", surgeryDate:"2026-08-29", procedure:"左足関節抜釘",           admissionRule:"dayBefore", losNights:7,  losConfirmed:false, ruleNote:true},
 ];
 // admissionDate・dischargeDateEstimateは上記ルールから実行時に算出する(addDaysISOは関数宣言のため巻き上げにより先に呼び出せる)
