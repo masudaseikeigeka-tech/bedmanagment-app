@@ -364,10 +364,13 @@
   .login-instruction{font-size:14px;font-weight:800;color:var(--sub);text-align:center;}
   .login-grid{
     display:grid;
-    grid-template-columns:repeat(3,1fr);
+    grid-template-columns:repeat(4,1fr);
     gap:16px;
     width:100%;
-    max-width:640px;
+    max-width:820px;
+  }
+  @media (max-width:700px){
+    .login-grid{grid-template-columns:repeat(2,1fr);}
   }
   .login-user-btn{
     display:flex;
@@ -389,6 +392,7 @@
   .role-doctor{background:#7c3aed;}
   .role-nurse{background:var(--blue);}
   .role-clerk{background:#059669;}
+  .role-assistant{background:#db2777;}
   .login-user-name{font-size:15px;font-weight:800;color:var(--ink);}
   .login-user-role{font-size:11.5px;color:var(--sub);}
 
@@ -556,6 +560,7 @@
   .sched-btn.primary{background:var(--blue);color:#fff;}
   .sched-btn.danger{background:#fff;color:var(--delay);border:1.5px solid var(--delay);}
   .sched-btn.ghost{background:#fff;color:var(--sub);border:1.5px solid var(--line);}
+  .sched-btn:disabled{opacity:.45;cursor:not-allowed;}
   .sched-confirm-box{
     background:#fdecec;border:1.5px solid var(--delay);border-radius:10px;padding:12px;margin-top:14px;
   }
@@ -592,6 +597,10 @@
       <button class="login-user-btn" data-role="clerk">
         <div class="login-avatar-circle role-clerk">ク</div>
         <div class="login-user-name">クラーク</div>
+      </button>
+      <button class="login-user-btn" data-role="assistant">
+        <div class="login-avatar-circle role-assistant">助</div>
+        <div class="login-user-name">看護助手</div>
       </button>
     </div>
   </div>
@@ -663,7 +672,7 @@
     <span class="legend-item"><span class="legend-dot" style="background:var(--longstay-bg);border:1.5px solid var(--longstay)"></span>長期入院注意</span>
     <span class="legend-item"><span class="legend-dot" style="background:#6b7280"></span>個室希望(2人部屋で空き待ち)</span>
     <!-- 更新確認用: iPadから内容を差し替えたとき、この日付が変わっていれば新しい版が反映されている -->
-    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-09-07a</span></span>
+    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-09-08c</span></span>
   </div>
 
   <!-- メイン(タブごとに表示を切り替える) -->
@@ -820,6 +829,130 @@
           <button type="button" class="sched-btn ghost" id="schedConfirmNo">いいえ</button>
           <button type="button" class="sched-btn danger" id="schedConfirmYes">はい、キャンセルする</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 空床への即時入院登録(急患等)フォーム(2026-09-08追加、spec.md 13.14)。
+       ダッシュボードで空床をタップすると開く。予定入院(#schedFormModal)は将来の予定を登録するのに対し、
+       こちらは「今まさにそのベッドに患者が入った」ことをその場で反映するためのもの。
+       手入力登録した患者(bed.manualEntry=true)は、再度タップするとこのフォームが編集モードで開く。 -->
+  <div class="vacancy-modal" id="admitFormModal">
+    <div class="vacancy-modal-box">
+      <div class="vacancy-modal-head">
+        <div class="vacancy-modal-title" id="admitFormTitle">入院登録</div>
+        <button class="vacancy-modal-close" id="admitFormClose">×</button>
+      </div>
+      <div class="sched-hint" id="admitFormRoomHint" style="margin-bottom:10px;"></div>
+
+      <div class="sched-form-row">
+        <label>患者名</label>
+        <input type="text" id="admitName" placeholder="例: 山田 太郎">
+      </div>
+
+      <div class="sched-form-row">
+        <label>性別</label>
+        <div class="sched-toggle-row" id="admitGenderToggle">
+          <button type="button" class="sched-toggle-btn active" data-gender="m">男</button>
+          <button type="button" class="sched-toggle-btn" data-gender="f">女</button>
+        </div>
+      </div>
+
+      <div class="sched-form-row">
+        <label>感染症の有無</label>
+        <div class="sched-toggle-row" id="admitInfectionToggle">
+          <button type="button" class="sched-toggle-btn active" data-infection="none">無</button>
+          <button type="button" class="sched-toggle-btn" data-infection="positive">有</button>
+        </div>
+        <input type="text" id="admitInfectionDetail" placeholder="例: MRSA(病名等を記入)" style="display:none;margin-top:8px;">
+      </div>
+
+      <div class="sched-form-row">
+        <label>入院日</label>
+        <input type="date" id="admitAdmissionDate">
+        <div class="sched-hint" id="admitAdmissionHint"></div>
+      </div>
+
+      <div class="sched-form-row">
+        <label class="sched-checkbox-row"><input type="checkbox" id="admitEmergency" checked> 緊急入院(急患)として登録する</label>
+      </div>
+
+      <div class="sched-form-row">
+        <label>手術予定</label>
+        <div class="sched-toggle-row" id="admitSurgeryToggle">
+          <button type="button" class="sched-toggle-btn active" data-surgery-type="">なし(安静入院)</button>
+          <button type="button" class="sched-toggle-btn" data-surgery-type="tka">TKA</button>
+          <button type="button" class="sched-toggle-btn" data-surgery-type="tha">THA</button>
+          <button type="button" class="sched-toggle-btn" data-surgery-type="uka">UKA</button>
+          <button type="button" class="sched-toggle-btn" data-surgery-type="spine">脊椎</button>
+          <button type="button" class="sched-toggle-btn" data-surgery-type="arthroscopy">関節鏡</button>
+          <button type="button" class="sched-toggle-btn" data-surgery-type="tcvo">TCVO</button>
+          <button type="button" class="sched-toggle-btn" data-surgery-type="other">その他の手術</button>
+        </div>
+      </div>
+      <div class="sched-form-row" id="admitSurgeryDateRow" style="display:none;">
+        <label>手術日(任意・未定なら空欄のまま)</label>
+        <input type="date" id="admitSurgeryDate">
+      </div>
+
+      <div class="sched-form-row">
+        <label>退院予定日(任意・未定なら空欄のまま「未定(要確認)」として登録)</label>
+        <input type="date" id="admitDischargeDate">
+      </div>
+
+      <div class="sched-form-row">
+        <label>備考(任意)</label>
+        <input type="text" id="admitReason" placeholder="例: 転倒による右大腿骨骨折のため救急搬送・緊急入院">
+      </div>
+
+      <div id="admitFormError" class="sched-hint" style="color:var(--delay);font-weight:800;"></div>
+
+      <div class="sched-form-actions">
+        <button type="button" class="sched-btn ghost" id="admitFormCancelBtn">閉じる</button>
+        <button type="button" class="sched-btn danger" id="admitFormVacateBtn" style="display:none;">登録を取り消して空床に戻す</button>
+        <button type="button" class="sched-btn primary" id="admitFormSaveBtn">登録する</button>
+      </div>
+
+      <div class="sched-confirm-box" id="admitConfirmBox" style="display:none;">
+        <p>この患者の入院登録を取り消し、空床に戻しますか?(入力ミスの訂正用です。実際に退院した場合の記録用途ではありません)</p>
+        <div class="sched-form-actions" style="margin-top:0;">
+          <button type="button" class="sched-btn ghost" id="admitConfirmNo">いいえ</button>
+          <button type="button" class="sched-btn danger" id="admitConfirmYes">はい、空床に戻す</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 病棟内ベッド移動(2026-09-08追加、spec.md 13.15)。入院中のベッドをタップすると開く操作パネル。
+       手入力登録した患者(manualEntry)は「内容を編集する」も選べる。 -->
+  <div class="vacancy-modal" id="bedActionModal">
+    <div class="vacancy-modal-box" style="max-width:420px;">
+      <div class="vacancy-modal-head">
+        <div class="vacancy-modal-title" id="bedActionTitle">患者情報</div>
+        <button class="vacancy-modal-close" id="bedActionClose">×</button>
+      </div>
+      <div class="sched-hint" id="bedActionSubtitle" style="margin-bottom:16px;"></div>
+      <div class="sched-form-actions" style="flex-direction:column;">
+        <button type="button" class="sched-btn primary" id="bedActionMoveBtn" style="width:100%;">🛏 この患者を別のベッドに移動する</button>
+        <button type="button" class="sched-btn ghost" id="bedActionEditBtn" style="width:100%;display:none;">内容を編集する</button>
+        <button type="button" class="sched-btn ghost" id="bedActionCloseBtn" style="width:100%;">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 病棟内ベッド移動: 移動先(現在の空床)を選ぶフォーム -->
+  <div class="vacancy-modal" id="moveFormModal">
+    <div class="vacancy-modal-box">
+      <div class="vacancy-modal-head">
+        <div class="vacancy-modal-title">ベッド移動</div>
+        <button class="vacancy-modal-close" id="moveFormClose">×</button>
+      </div>
+      <div class="sched-hint" id="moveFormSubtitle" style="margin-bottom:12px;"></div>
+      <div id="moveTargetList"></div>
+      <div id="moveFormError" class="sched-hint" style="color:var(--delay);font-weight:800;"></div>
+      <div class="sched-form-actions">
+        <button type="button" class="sched-btn ghost" id="moveFormCancelBtn">閉じる</button>
+        <button type="button" class="sched-btn primary" id="moveFormConfirmBtn" disabled>選んだベッドに移動する</button>
       </div>
     </div>
   </div>
@@ -1018,7 +1151,13 @@ const SCHEDULED_ADMISSIONS = SCHEDULED_ADMISSIONS_RAW.map(s => {
 // タップ→お名前(ID)を自分で入力」する方式に変更(spec.md 13.11)。職員が20名超と多く、
 // 一覧から探す手間・共通PINの形骸化を解消するための簡便化。個別PIN・監査ログは将来の
 // バックエンド実装後に別途対応する。
-const ROLE_LABEL = { doctor:"医師", nurse:"看護師", clerk:"クラーク" };
+const ROLE_LABEL = { doctor:"医師", nurse:"看護師", clerk:"クラーク", assistant:"看護助手" };
+// 2026-09-08追加(spec.md 13.16): 看護助手ロールのみ、ベッド移動以外の操作(入院登録・編集・
+// 予定入院の登録/編集/キャンセルなど)を行えないよう制限する。それ以外の役割(医師/看護師/
+// クラーク)は、これまで通り互いに機能制限が無い。
+function canWrite(){
+  return !currentUser || currentUser.role !== "assistant";
+}
 
 /* =========================================================
    日付ユーティリティ
@@ -1084,13 +1223,13 @@ function badgesFor(b){
 
 function surgeryLine(b){
   if(!b.surgeryType) return "";
-  return `<div class="bed-meta" style="font-weight:800;color:#4b5563;">${SURGERY_LABEL[b.surgeryType]} ${fmt(b.surgeryDate)}</div>`;
+  return `<div class="bed-meta" style="font-weight:800;color:#4b5563;">${SURGERY_LABEL[b.surgeryType]} ${b.surgeryDate ? fmt(b.surgeryDate) : "(手術日未定)"}</div>`;
 }
 
 // 入院予定一覧・退院予定一覧向け: ①手術日 ②術式、または③安静入院(手術なし)の別を1行で示す
 function surgeryOrRestLineHTML(b){
   if(b.surgeryType){
-    return `<div class="list-card-meta" style="font-weight:800;color:#4b5563;">手術日 ${fmt(b.surgeryDate)} ／ 術式 ${SURGERY_LABEL[b.surgeryType]}</div>`;
+    return `<div class="list-card-meta" style="font-weight:800;color:#4b5563;">手術日 ${b.surgeryDate ? fmt(b.surgeryDate) : "未定"} ／ 術式 ${SURGERY_LABEL[b.surgeryType]}</div>`;
   }
   return `<div class="list-card-meta" style="font-weight:800;color:#4b5563;">安静入院(手術なし)</div>`;
 }
@@ -1623,6 +1762,7 @@ document.getElementById("schedConfirmYes").addEventListener("click", () => {
 function refreshScheduledDependentViews(){
   renderAdmissions();
   renderSurgeries();
+  renderDischarges(); // 2026-09-08追加: 空床への即時入院登録(急患等)がbeds[]を書き換えるため、退院予定一覧も都度再描画する
   updateSummary();
   if(document.getElementById("vacancyModal").classList.contains("show")){
     renderVacancyCalendar();
@@ -1714,10 +1854,23 @@ function scheduledSurgeryCardHTML(s){
 // 登録内容は手術日・術式もまとめて含むため、どちらのタブから登録・編集しても同じデータを扱う。
 function wireSchedAddButton(id){
   const btn = document.getElementById(id);
-  if(btn) btn.addEventListener("click", () => openSchedForm(null));
+  if(!btn) return;
+  // 2026-09-08追加(spec.md 13.16): 看護助手ロールは予定入院の新規登録ができないため、ボタン自体を隠す
+  if(!canWrite()){
+    btn.style.display = "none";
+    return;
+  }
+  btn.style.display = "";
+  btn.addEventListener("click", () => openSchedForm(null));
 }
 function wireSchedCardClicks(container){
   container.querySelectorAll(".list-card.clickable").forEach(el => {
+    // 2026-09-08追加(spec.md 13.16): 看護助手ロールは予定入院の編集・キャンセルができないため、
+    // タップしても開かないようにし、タップ可能に見えるスタイルも外す
+    if(!canWrite()){
+      el.classList.remove("clickable");
+      return;
+    }
     el.addEventListener("click", () => {
       const s = SCHEDULED_ADMISSIONS.find(x => x.id === el.dataset.schedId);
       if(s) openSchedForm(s);
@@ -1730,7 +1883,7 @@ function renderSurgeries(){
   const scheduledRows = [...visibleScheduled].sort((a, b) => a.surgeryDate.localeCompare(b.surgeryDate));
 
   const currentRows = beds
-    .filter(b => b.patient && b.surgeryType)
+    .filter(b => b.patient && b.surgeryType && b.surgeryDate) // 手術日未定の手入力登録分はこの参考一覧では除外(日付順に並べられないため)
     .map(b => ({ b, p: patients[b.patient] }))
     .sort((a, b) => b.b.surgeryDate.localeCompare(a.b.surgeryDate)); // 新しい手術が上
 
@@ -1843,16 +1996,279 @@ document.getElementById("filters").addEventListener("click", (e)=>{
 });
 
 /* =========================================================
-   ベッドタップ(デモ用トースト)
+   空床への即時入院登録(急患等)(2026-09-08追加、spec.md 13.14)
+   予定入院(SCHEDULED_ADMISSIONS)は将来の予定を登録するものだが、こちらはダッシュボードで
+   空床をタップし、その場でそのベッドに患者を入れる(=beds[]・patientsを直接書き換える)もの。
+   バックエンド未実装のため、予定入院フォームと同様、リロードすると元のデータに戻る。
+   ========================================================= */
+const admitFormModal = document.getElementById("admitFormModal");
+const admitGenderToggle = document.getElementById("admitGenderToggle");
+const admitInfectionToggle = document.getElementById("admitInfectionToggle");
+const admitSurgeryToggle = document.getElementById("admitSurgeryToggle");
+let admitGenderValue = "m";
+let admitInfectionValue = "none";
+let admitSurgeryTypeValue = "";
+let admitTargetBedId = null;
+let admitEditing = false;
+let admitPatientCounter = 1;
+
+function resetAdmitForm(){
+  document.getElementById("admitName").value = "";
+  document.getElementById("admitAdmissionDate").value = TODAY;
+  document.getElementById("admitAdmissionHint").textContent = "";
+  document.getElementById("admitInfectionDetail").value = "";
+  document.getElementById("admitEmergency").checked = true;
+  document.getElementById("admitSurgeryDate").value = "";
+  document.getElementById("admitDischargeDate").value = "";
+  document.getElementById("admitReason").value = "";
+  document.getElementById("admitFormError").textContent = "";
+  document.getElementById("admitConfirmBox").style.display = "none";
+  setAdmitGenderUI("m");
+  setAdmitInfectionUI("none");
+  setAdmitSurgeryTypeUI("");
+}
+function setAdmitGenderUI(v){
+  admitGenderValue = v;
+  admitGenderToggle.querySelectorAll(".sched-toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.gender === v));
+}
+function setAdmitInfectionUI(v){
+  admitInfectionValue = v;
+  admitInfectionToggle.querySelectorAll(".sched-toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.infection === v));
+  document.getElementById("admitInfectionDetail").style.display = v === "positive" ? "" : "none";
+}
+function setAdmitSurgeryTypeUI(v){
+  admitSurgeryTypeValue = v;
+  admitSurgeryToggle.querySelectorAll(".sched-toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.surgeryType === v));
+  document.getElementById("admitSurgeryDateRow").style.display = v ? "" : "none";
+}
+admitGenderToggle.addEventListener("click", (e) => {
+  const btn = e.target.closest(".sched-toggle-btn");
+  if(!btn) return;
+  setAdmitGenderUI(btn.dataset.gender);
+});
+admitInfectionToggle.addEventListener("click", (e) => {
+  const btn = e.target.closest(".sched-toggle-btn");
+  if(!btn) return;
+  setAdmitInfectionUI(btn.dataset.infection);
+});
+admitSurgeryToggle.addEventListener("click", (e) => {
+  const btn = e.target.closest(".sched-toggle-btn");
+  if(!btn) return;
+  setAdmitSurgeryTypeUI(btn.dataset.surgeryType);
+});
+
+// 空床タップ→新規登録、または手入力登録済み(manualEntry:true)のベッドタップ→編集、の2通りで開く
+function openAdmitForm(bedId){
+  const bed = beds.find(x => x.id === bedId);
+  if(!bed) return;
+  resetAdmitForm();
+  admitTargetBedId = bedId;
+  admitEditing = !!bed.manualEntry;
+  document.getElementById("admitFormTitle").textContent = admitEditing ? "入院登録の編集" : "入院登録(空床への登録)";
+  document.getElementById("admitFormRoomHint").textContent = `対象: ${roomLabel(bed)}`;
+  document.getElementById("admitFormVacateBtn").style.display = admitEditing ? "" : "none";
+
+  if(admitEditing){
+    const p = patients[bed.patient];
+    document.getElementById("admitName").value = p ? p.name : "";
+    setAdmitGenderUI(p ? p.gender : "m");
+    setAdmitInfectionUI(bed.status === "infect" ? "positive" : "none");
+    document.getElementById("admitInfectionDetail").value = bed.infectionDetail || "";
+    const admissionDate = admissionDateOf(bed);
+    document.getElementById("admitAdmissionDate").value = admissionDate || TODAY;
+    document.getElementById("admitEmergency").checked = !!bed.emergency;
+    setAdmitSurgeryTypeUI(bed.surgeryType || "");
+    document.getElementById("admitSurgeryDate").value = bed.surgeryType ? (bed.surgeryDate || "") : "";
+    const dDate = parsedDischargeDate(bed);
+    document.getElementById("admitDischargeDate").value = dDate || "";
+    document.getElementById("admitReason").value = bed.reason || "";
+  }
+
+  admitFormModal.classList.add("show");
+}
+function closeAdmitForm(){
+  admitFormModal.classList.remove("show");
+  admitTargetBedId = null;
+  admitEditing = false;
+}
+document.getElementById("admitFormClose").addEventListener("click", closeAdmitForm);
+document.getElementById("admitFormCancelBtn").addEventListener("click", closeAdmitForm);
+
+function saveAdmitForm(){
+  const name = document.getElementById("admitName").value.trim();
+  const admissionDate = document.getElementById("admitAdmissionDate").value;
+  const errEl = document.getElementById("admitFormError");
+
+  if(!name){ errEl.textContent = "患者名を入力してください。"; return; }
+  if(!admissionDate){ errEl.textContent = "入院日を入力してください。"; return; }
+  if(admissionDate > TODAY){ errEl.textContent = "入院日は本日以前の日付にしてください(未来の入院予定は「予定入院」から登録してください)。"; return; }
+  errEl.textContent = "";
+
+  const bed = beds.find(x => x.id === admitTargetBedId);
+  if(!bed) return;
+
+  const infectionDetail = admitInfectionValue === "positive" ? document.getElementById("admitInfectionDetail").value.trim() : "";
+  const dischargeDateInput = document.getElementById("admitDischargeDate").value;
+  const reasonInput = document.getElementById("admitReason").value.trim();
+  const losDayCount = diffDaysISO(admissionDate, TODAY) + 1;
+
+  let patientId = admitEditing ? bed.patient : null;
+  if(!patientId){
+    patientId = "pE" + String(admitPatientCounter++).padStart(2, "0");
+  }
+  patients[patientId] = { name, gender: admitGenderValue };
+
+  bed.patient = patientId;
+  bed.status = admitInfectionValue === "positive" ? "infect" : "occupied";
+  bed.los = `入院${losDayCount}日目`;
+  bed.discharge = dischargeDateInput || "未定(要確認)";
+  bed.emergency = document.getElementById("admitEmergency").checked;
+  bed.manualEntry = true;
+  bed.infectionDetail = infectionDetail || undefined;
+  if(admitSurgeryTypeValue){
+    bed.surgeryType = admitSurgeryTypeValue;
+    const surgeryDateInput = document.getElementById("admitSurgeryDate").value;
+    if(surgeryDateInput) bed.surgeryDate = surgeryDateInput; else delete bed.surgeryDate;
+  } else {
+    delete bed.surgeryType;
+    delete bed.surgeryDate;
+  }
+  bed.reason = reasonInput || (infectionDetail ? `感染症: ${infectionDetail}` : undefined) || undefined;
+  if(infectionDetail && reasonInput) bed.reason = `${reasonInput}(感染症: ${infectionDetail})`;
+
+  closeAdmitForm();
+  render();
+  refreshScheduledDependentViews();
+}
+document.getElementById("admitFormSaveBtn").addEventListener("click", saveAdmitForm);
+
+document.getElementById("admitFormVacateBtn").addEventListener("click", () => {
+  document.getElementById("admitConfirmBox").style.display = "";
+});
+document.getElementById("admitConfirmNo").addEventListener("click", () => {
+  document.getElementById("admitConfirmBox").style.display = "none";
+});
+document.getElementById("admitConfirmYes").addEventListener("click", () => {
+  const bed = beds.find(x => x.id === admitTargetBedId);
+  if(bed){
+    delete patients[bed.patient];
+    const { id, room, type } = bed;
+    Object.keys(bed).forEach(k => delete bed[k]);
+    Object.assign(bed, { id, room, type, status: "vacant" });
+  }
+  closeAdmitForm();
+  render();
+  refreshScheduledDependentViews();
+});
+
+/* =========================================================
+   病棟内ベッド移動(2026-09-08追加、spec.md 13.15)
+   入院中のベッドをタップすると開く操作パネル(#bedActionModal)から、
+   「この患者を別のベッドに移動する」を選ぶと移動先(現在の空床)選択フォーム(#moveFormModal)が開く。
+   手入力登録(manualEntry)した患者に限らず、電子カルテ由来の既存患者も含め、入院中のすべてのベッドで
+   移動できる(内容の編集は誤操作防止のためmanualEntryの患者のみ可能なのと区別している)。
+   ========================================================= */
+let bedActionTargetId = null;
+function openBedActionPanel(id){
+  const b = beds.find(x=>x.id===id);
+  if(!b) return;
+  bedActionTargetId = id;
+  const p = patients[b.patient];
+  document.getElementById("bedActionTitle").textContent = p ? `${p.name} さん` : "患者情報";
+  document.getElementById("bedActionSubtitle").textContent = `${roomLabel(b)}${b.los ? "／" + b.los : ""}`;
+  // 2026-09-08追加(spec.md 13.16): 看護助手ロールは内容編集ができないため、手入力登録した患者でも編集ボタンは出さない
+  document.getElementById("bedActionEditBtn").style.display = (b.manualEntry && canWrite()) ? "" : "none";
+  document.getElementById("bedActionModal").classList.add("show");
+}
+function closeBedActionPanel(){
+  document.getElementById("bedActionModal").classList.remove("show");
+}
+document.getElementById("bedActionClose").addEventListener("click", closeBedActionPanel);
+document.getElementById("bedActionCloseBtn").addEventListener("click", closeBedActionPanel);
+document.getElementById("bedActionEditBtn").addEventListener("click", () => {
+  closeBedActionPanel();
+  openAdmitForm(bedActionTargetId);
+});
+document.getElementById("bedActionMoveBtn").addEventListener("click", () => {
+  const id = bedActionTargetId;
+  closeBedActionPanel();
+  openMoveForm(id);
+});
+
+let moveSourceBedId = null;
+let moveSelectedTargetId = null;
+function openMoveForm(sourceBedId){
+  const source = beds.find(x => x.id === sourceBedId);
+  if(!source) return;
+  moveSourceBedId = sourceBedId;
+  moveSelectedTargetId = null;
+  const p = patients[source.patient];
+  document.getElementById("moveFormSubtitle").textContent =
+    `${p ? p.name : "患者"} さん(現在: ${roomLabel(source)})の移動先の空床を選んでください。`;
+  document.getElementById("moveFormError").textContent = "";
+
+  const vacantBeds = beds.filter(b => b.status === "vacant");
+  const listEl = document.getElementById("moveTargetList");
+  listEl.innerHTML = vacantBeds.length
+    ? `<div class="sched-toggle-row">${vacantBeds.map(b => `<button type="button" class="sched-toggle-btn" data-move-target="${b.id}">${roomLabel(b)}</button>`).join("")}</div>`
+    : `<div class="list-empty">現在、移動できる空床がありません。</div>`;
+
+  document.getElementById("moveFormConfirmBtn").disabled = true;
+  document.getElementById("moveFormModal").classList.add("show");
+}
+function closeMoveForm(){
+  document.getElementById("moveFormModal").classList.remove("show");
+  moveSourceBedId = null;
+  moveSelectedTargetId = null;
+}
+document.getElementById("moveFormClose").addEventListener("click", closeMoveForm);
+document.getElementById("moveFormCancelBtn").addEventListener("click", closeMoveForm);
+document.getElementById("moveTargetList").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-move-target]");
+  if(!btn) return;
+  moveSelectedTargetId = btn.dataset.moveTarget;
+  document.getElementById("moveTargetList").querySelectorAll("[data-move-target]").forEach(b => b.classList.toggle("active", b === btn));
+  document.getElementById("moveFormConfirmBtn").disabled = false;
+});
+document.getElementById("moveFormConfirmBtn").addEventListener("click", () => {
+  if(!moveSelectedTargetId){
+    document.getElementById("moveFormError").textContent = "移動先のベッドを選んでください。";
+    return;
+  }
+  const source = beds.find(x => x.id === moveSourceBedId);
+  const target = beds.find(x => x.id === moveSelectedTargetId);
+  if(!source || !target || target.status !== "vacant"){
+    document.getElementById("moveFormError").textContent = "移動先が空床でなくなりました。お手数ですが、もう一度お試しください。";
+    return;
+  }
+  // 患者の情報一式(id/room/typeという「ベッド自体の固定情報」以外)を移動先ベッドへコピーし、
+  // 元のベッドは空床にリセットする。入院日数(los)はそのまま引き継ぐ(入院日そのものは変わらないため)。
+  const { id: sId, room: sRoom, type: sType, ...patientFields } = source;
+  const { id: tId, room: tRoom, type: tType } = target;
+  Object.assign(target, patientFields, { id: tId, room: tRoom, type: tType });
+  Object.keys(source).forEach(k => delete source[k]);
+  Object.assign(source, { id: sId, room: sRoom, type: sType, status: "vacant" });
+
+  closeMoveForm();
+  render();
+  refreshScheduledDependentViews();
+});
+
+/* =========================================================
+   ベッドタップ
    ========================================================= */
 function onBedTap(id){
   const b = beds.find(x=>x.id===id);
   if(!b) return;
   if(b.status==="vacant"){
-    showToast(`${b.room} は空床です。入院予定患者を割り当てできます。`);
+    // 2026-09-08追加(spec.md 13.16): 看護助手ロールは新規入院登録ができない
+    if(!canWrite()){
+      showToast("看護助手の方は、入院登録はできません(ベッド移動のみご利用いただけます)。");
+      return;
+    }
+    openAdmitForm(id);
   }else{
-    const p = patients[b.patient];
-    showToast(`${p.name} さんの患者詳細を開きます(モックのため未実装)`);
+    openBedActionPanel(id);
   }
 }
 
@@ -2167,6 +2583,9 @@ function submitLoginId(){
   currentUser = { name, role: loginSelectedRole };
   document.getElementById("currentUserName").textContent = `${currentUser.name}(${ROLE_LABEL[currentUser.role]})`;
   loginScreen.style.display = "none";
+  // 役割によって操作できる範囲が変わる(看護助手はベッド移動のみ)ため、ログインのたびに
+  // 入院予定・手術予定・退院予定タブを権限に応じて再描画し直す(spec.md 13.16)。
+  refreshScheduledDependentViews();
 }
 document.getElementById("loginIdSubmitBtn").addEventListener("click", submitLoginId);
 loginIdInput.addEventListener("keydown", (e)=>{
