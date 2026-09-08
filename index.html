@@ -416,11 +416,18 @@
 
   /* ---------- 共有iPad用ヘッダー(ログイン中の職員表示・切替) ---------- */
   .app-header{
-    display:flex;align-items:center;justify-content:space-between;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
     background:#fff;border-bottom:1px solid var(--line);
     padding:6px 14px;font-size:11.5px;color:var(--sub);
   }
   .logout-btn{border:none;background:none;color:var(--sub);font-weight:800;font-size:11.5px;cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px;}
+  /* 2026-09-08追加(spec.md 13.18): アプリのデータ基準日(TODAY)と実際の現在日時を常時表示し、
+     「今開いている情報がいつ時点のものか」を一目でわかるようにする。 */
+  .header-clock{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11.5px;font-weight:700;}
+  .header-clock-basis{color:var(--sub);}
+  .header-clock-basis b{color:var(--ink);font-weight:800;}
+  .header-clock-now{color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums;}
+  .header-clock-warn{color:#fff;background:var(--delay);border-radius:999px;padding:2px 9px;font-weight:800;}
 
   /* ---------- 入院予定/退院予定/手術予定 一覧画面 ---------- */
   .list-view{display:flex;flex-direction:column;gap:10px;}
@@ -516,6 +523,7 @@
     width:100%;padding:10px 12px;font-size:15px;border:1.5px solid var(--line);border-radius:10px;
     background:#fff;color:var(--ink);font-family:inherit;
   }
+  .sched-form-row input:disabled{background:#f3f4f6;color:var(--sub);}
   .sched-form-grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
   .sched-toggle-row{display:flex;gap:8px;flex-wrap:wrap;}
   .sched-toggle-btn{
@@ -571,6 +579,7 @@
   }
   .list-card.cancelled{opacity:.55;}
   .list-card.cancelled .list-card-name{text-decoration:line-through;}
+  .list-card.expired{opacity:.6;}
   .list-card.clickable{cursor:pointer;}
 </style>
 </head>
@@ -626,6 +635,11 @@
   <!-- 共有iPad用ヘッダー: ログイン中の職員名を表示し、タップで職員選択に戻れる(=別の職員へ切替) -->
   <div class="app-header">
     <span>増田整形外科 病床管理</span>
+    <div class="header-clock" id="headerClock">
+      <span class="header-clock-basis">📅 データ基準日: <b id="headerBasisDate">-</b></span>
+      <span class="header-clock-warn" id="headerBasisWarn" style="display:none;"></span>
+      <span class="header-clock-now" id="headerNowClock">🕐 -</span>
+    </div>
     <button class="logout-btn" id="logoutBtn">ログイン中: <span id="currentUserName">-</span>(タップで切替)</button>
   </div>
 
@@ -672,7 +686,7 @@
     <span class="legend-item"><span class="legend-dot" style="background:var(--longstay-bg);border:1.5px solid var(--longstay)"></span>長期入院注意</span>
     <span class="legend-item"><span class="legend-dot" style="background:#6b7280"></span>個室希望(2人部屋で空き待ち)</span>
     <!-- 更新確認用: iPadから内容を差し替えたとき、この日付が変わっていれば新しい版が反映されている -->
-    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-09-08c</span></span>
+    <span class="legend-item" style="margin-left:auto;color:#9ca3af;">版: <span id="app-version">2026-09-08d</span></span>
   </div>
 
   <!-- メイン(タブごとに表示を切り替える) -->
@@ -896,7 +910,11 @@
       </div>
 
       <div class="sched-form-row">
-        <label>退院予定日(任意・未定なら空欄のまま「未定(要確認)」として登録)</label>
+        <label>退院予定日</label>
+        <div class="sched-toggle-row" id="admitDischargeModeToggle" style="margin-bottom:8px;">
+          <button type="button" class="sched-toggle-btn active" data-discharge-mode="date">日付を指定する</button>
+          <button type="button" class="sched-toggle-btn" data-discharge-mode="unknown">未定</button>
+        </div>
         <input type="date" id="admitDischargeDate">
       </div>
 
@@ -1332,17 +1350,29 @@ function scheduledFlagBadges(s){
   if(s.infectionStatus === "positive") html += `<span class="badge infect">感染症あり${s.infectionDetail ? "("+s.infectionDetail+")" : ""}</span>`;
   return html;
 }
+// 2026-09-08追加(spec.md 13.17): 入院予定日を過ぎても消えずに残ってしまう問題への対応。
+// キャンセル済みと同様、入院日がTODAYより前になった予定は既定では一覧から自動的に隠す
+// (完全に削除はしない。実際に入院済みか確認が取れず不用意にデータを消さないため。
+//  「過去・キャンセル済みの予定を表示」トグルでいつでも確認できる)。
+function isAdmissionExpired(s){
+  return !s.cancelled && s.admissionDate < TODAY;
+}
+function isSurgeryExpired(s){
+  return !s.cancelled && s.surgeryDate < TODAY;
+}
 function scheduledAdmissionCardHTML(s){
   const isToday = s.admissionDate === TODAY;
   const cancelled = !!s.cancelled;
+  const expired = isAdmissionExpired(s);
   return `
-    <div class="list-card clickable${cancelled ? " cancelled" : ""}" data-sched-id="${s.id}">
+    <div class="list-card clickable${cancelled ? " cancelled" : ""}${expired ? " expired" : ""}" data-sched-id="${s.id}">
       <div class="gender-tag ${s.gender}">${s.gender === "m" ? "男" : "女"}</div>
       <div class="list-card-body">
         <div class="list-card-top">
           <span class="list-card-name">${s.name}${s.age ? `(${s.age})` : ""}</span>
           <span class="list-card-room">病室 未定</span>
           ${cancelled ? `<span class="badge" style="background:#6b7280;">キャンセル済み</span>` : ""}
+          ${expired ? `<span class="badge longstay">⚠️ 入院日超過(要確認)</span>` : ""}
           ${!cancelled && isToday ? `<span class="badge soon">本日入院</span>` : ""}
           ${scheduledSurgeonBadge(s)}
           ${cancelled ? "" : scheduledFlagBadges(s)}
@@ -1353,14 +1383,17 @@ function scheduledAdmissionCardHTML(s){
       </div>
     </div>`;
 }
-// 2026-08-23追加: キャンセル済みを除いた「有効な」予定入院一覧(表示・集計の基本はこちらを使う)
+// 2026-08-23追加: キャンセル済みを除いた「有効な」予定入院一覧(表示・集計の基本はこちらを使う)。
+// 空床見込みカレンダー等の集計はこちらを使い続ける(入院日超過フィルタの対象外。要確認扱いの
+// 入院日超過分を集計から外すと、実際には入院済みで反映漏れの患者を過小評価してしまうため)。
 function activeScheduledAdmissions(){
   return SCHEDULED_ADMISSIONS.filter(s => !s.cancelled);
 }
 let showCancelledScheduled = false;
 function renderAdmissions(){
   const container = document.getElementById("view-admissions");
-  const visibleScheduled = showCancelledScheduled ? SCHEDULED_ADMISSIONS : activeScheduledAdmissions();
+  const activeRows = activeScheduledAdmissions().filter(s => !isAdmissionExpired(s));
+  const visibleScheduled = showCancelledScheduled ? SCHEDULED_ADMISSIONS : activeRows;
   const scheduledRows = [...visibleScheduled].sort((a, b) => a.admissionDate.localeCompare(b.admissionDate));
 
   const currentRows = beds
@@ -1380,9 +1413,9 @@ function renderAdmissions(){
     ? scheduledRows.map(scheduledAdmissionCardHTML).join("")
     : `<div class="list-empty">登録済みの予定入院はありません。</div>`;
 
-  const cancelledCount = SCHEDULED_ADMISSIONS.filter(s => s.cancelled).length;
-  if(cancelledCount > 0){
-    html += `<button type="button" class="sched-cancelled-toggle" id="schedCancelledToggle">${showCancelledScheduled ? "キャンセル済みを隠す" : `キャンセル済みを表示(${cancelledCount}件)`}</button>`;
+  const hiddenCount = SCHEDULED_ADMISSIONS.length - activeRows.length;
+  if(hiddenCount > 0){
+    html += `<button type="button" class="sched-cancelled-toggle" id="schedCancelledToggle">${showCancelledScheduled ? "過去・キャンセル済みの予定を隠す" : `過去・キャンセル済みの予定を表示(${hiddenCount}件)`}</button>`;
   }
 
   html += `
@@ -1834,14 +1867,16 @@ function scheduledSurgeryCardHTML(s){
   const daysUntil = diffDaysISO(TODAY, s.surgeryDate);
   const dayLabel = daysUntil === 0 ? "本日手術" : daysUntil > 0 ? `${daysUntil}日後に予定` : `術後${-daysUntil}日`;
   const cancelled = !!s.cancelled;
+  const expired = isSurgeryExpired(s);
   return `
-    <div class="list-card clickable${cancelled ? " cancelled" : ""}" data-sched-id="${s.id}">
+    <div class="list-card clickable${cancelled ? " cancelled" : ""}${expired ? " expired" : ""}" data-sched-id="${s.id}">
       <div class="gender-tag ${s.gender}">${s.gender === "m" ? "男" : "女"}</div>
       <div class="list-card-body">
         <div class="list-card-top">
           <span class="list-card-name">${s.name}${s.age ? `(${s.age})` : ""}</span>
           <span class="badge obs">${s.procedure}</span>
           ${cancelled ? `<span class="badge" style="background:#6b7280;">キャンセル済み</span>` : ""}
+          ${expired ? `<span class="badge longstay">⚠️ 手術日超過(要確認)</span>` : ""}
           ${scheduledSurgeonBadge(s)}
           ${cancelled ? "" : scheduledFlagBadges(s)}
         </div>
@@ -1879,7 +1914,8 @@ function wireSchedCardClicks(container){
 }
 function renderSurgeries(){
   const container = document.getElementById("view-surgeries");
-  const visibleScheduled = showCancelledScheduled ? SCHEDULED_ADMISSIONS : activeScheduledAdmissions();
+  const activeRows = activeScheduledAdmissions().filter(s => !isSurgeryExpired(s));
+  const visibleScheduled = showCancelledScheduled ? SCHEDULED_ADMISSIONS : activeRows;
   const scheduledRows = [...visibleScheduled].sort((a, b) => a.surgeryDate.localeCompare(b.surgeryDate));
 
   const currentRows = beds
@@ -1898,9 +1934,9 @@ function renderSurgeries(){
     ? scheduledRows.map(scheduledSurgeryCardHTML).join("")
     : `<div class="list-empty">登録済みの予定手術はありません。</div>`;
 
-  const cancelledCount = SCHEDULED_ADMISSIONS.filter(s => s.cancelled).length;
-  if(cancelledCount > 0){
-    html += `<button type="button" class="sched-cancelled-toggle" id="schedCancelledToggleSurgeries">${showCancelledScheduled ? "キャンセル済みを隠す" : `キャンセル済みを表示(${cancelledCount}件)`}</button>`;
+  const hiddenCount = SCHEDULED_ADMISSIONS.length - activeRows.length;
+  if(hiddenCount > 0){
+    html += `<button type="button" class="sched-cancelled-toggle" id="schedCancelledToggleSurgeries">${showCancelledScheduled ? "過去・キャンセル済みの予定を隠す" : `過去・キャンセル済みの予定を表示(${hiddenCount}件)`}</button>`;
   }
 
   html += `
@@ -2005,9 +2041,11 @@ const admitFormModal = document.getElementById("admitFormModal");
 const admitGenderToggle = document.getElementById("admitGenderToggle");
 const admitInfectionToggle = document.getElementById("admitInfectionToggle");
 const admitSurgeryToggle = document.getElementById("admitSurgeryToggle");
+const admitDischargeModeToggle = document.getElementById("admitDischargeModeToggle");
 let admitGenderValue = "m";
 let admitInfectionValue = "none";
 let admitSurgeryTypeValue = "";
+let admitDischargeModeValue = "date";
 let admitTargetBedId = null;
 let admitEditing = false;
 let admitPatientCounter = 1;
@@ -2026,6 +2064,7 @@ function resetAdmitForm(){
   setAdmitGenderUI("m");
   setAdmitInfectionUI("none");
   setAdmitSurgeryTypeUI("");
+  setAdmitDischargeModeUI("date");
 }
 function setAdmitGenderUI(v){
   admitGenderValue = v;
@@ -2041,6 +2080,19 @@ function setAdmitSurgeryTypeUI(v){
   admitSurgeryToggle.querySelectorAll(".sched-toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.surgeryType === v));
   document.getElementById("admitSurgeryDateRow").style.display = v ? "" : "none";
 }
+// 2026-09-08追加(spec.md 13.19): 退院予定日を「未定」ボタンで明示的に選べるようにする。
+// 「未定」を選ぶと日付欄が空欄・入力不可になり、保存時は必ず「未定(要確認)」として登録される。
+function setAdmitDischargeModeUI(v){
+  admitDischargeModeValue = v;
+  admitDischargeModeToggle.querySelectorAll(".sched-toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.dischargeMode === v));
+  const dateInput = document.getElementById("admitDischargeDate");
+  if(v === "unknown"){
+    dateInput.value = "";
+    dateInput.disabled = true;
+  } else {
+    dateInput.disabled = false;
+  }
+}
 admitGenderToggle.addEventListener("click", (e) => {
   const btn = e.target.closest(".sched-toggle-btn");
   if(!btn) return;
@@ -2055,6 +2107,11 @@ admitSurgeryToggle.addEventListener("click", (e) => {
   const btn = e.target.closest(".sched-toggle-btn");
   if(!btn) return;
   setAdmitSurgeryTypeUI(btn.dataset.surgeryType);
+});
+admitDischargeModeToggle.addEventListener("click", (e) => {
+  const btn = e.target.closest(".sched-toggle-btn");
+  if(!btn) return;
+  setAdmitDischargeModeUI(btn.dataset.dischargeMode);
 });
 
 // 空床タップ→新規登録、または手入力登録済み(manualEntry:true)のベッドタップ→編集、の2通りで開く
@@ -2080,7 +2137,8 @@ function openAdmitForm(bedId){
     setAdmitSurgeryTypeUI(bed.surgeryType || "");
     document.getElementById("admitSurgeryDate").value = bed.surgeryType ? (bed.surgeryDate || "") : "";
     const dDate = parsedDischargeDate(bed);
-    document.getElementById("admitDischargeDate").value = dDate || "";
+    setAdmitDischargeModeUI(dDate ? "date" : "unknown");
+    if(dDate) document.getElementById("admitDischargeDate").value = dDate;
     document.getElementById("admitReason").value = bed.reason || "";
   }
 
@@ -2102,6 +2160,10 @@ function saveAdmitForm(){
   if(!name){ errEl.textContent = "患者名を入力してください。"; return; }
   if(!admissionDate){ errEl.textContent = "入院日を入力してください。"; return; }
   if(admissionDate > TODAY){ errEl.textContent = "入院日は本日以前の日付にしてください(未来の入院予定は「予定入院」から登録してください)。"; return; }
+  if(admitDischargeModeValue === "date" && !document.getElementById("admitDischargeDate").value){
+    errEl.textContent = "退院予定日を入力するか、「未定」を選んでください。";
+    return;
+  }
   errEl.textContent = "";
 
   const bed = beds.find(x => x.id === admitTargetBedId);
@@ -2121,7 +2183,7 @@ function saveAdmitForm(){
   bed.patient = patientId;
   bed.status = admitInfectionValue === "positive" ? "infect" : "occupied";
   bed.los = `入院${losDayCount}日目`;
-  bed.discharge = dischargeDateInput || "未定(要確認)";
+  bed.discharge = admitDischargeModeValue === "unknown" ? "未定(要確認)" : (dischargeDateInput || "未定(要確認)");
   bed.emergency = document.getElementById("admitEmergency").checked;
   bed.manualEntry = true;
   bed.infectionDetail = infectionDetail || undefined;
@@ -2608,6 +2670,35 @@ render();
 renderAdmissions();
 renderDischarges();
 renderSurgeries();
+
+/* =========================================================
+   ヘッダーの日付・時計表示(2026-09-08追加、spec.md 13.18)
+   TODAY(アプリのデータ基準日)は手動更新のため、実際の日付とずれている可能性がある。
+   実際の現在日時を常に表示し、ずれている場合は警告することで、「今表示されている情報が
+   いつ時点のものか」を利用者が一目で判断できるようにする。
+   ========================================================= */
+const WEEKDAY_JA = ["日","月","火","水","木","金","土"];
+function updateHeaderClock(){
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}:${String(now.getSeconds()).padStart(2,"0")}`;
+  const nowDateStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}(${WEEKDAY_JA[now.getDay()]})`;
+  document.getElementById("headerNowClock").textContent = `🕐 ${nowDateStr} ${timeStr}`;
+
+  const basisWeekday = WEEKDAY_JA[toDateObj(TODAY).getUTCDay()];
+  document.getElementById("headerBasisDate").textContent = `${fmt(TODAY)}(${basisWeekday})`;
+
+  const realTodayISO = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+  const warnEl = document.getElementById("headerBasisWarn");
+  if(realTodayISO !== TODAY){
+    warnEl.style.display = "";
+    warnEl.textContent = "⚠️ 実際の日付と異なります";
+    warnEl.title = "アプリのデータ基準日が実際の日付と一致していません。表示内容が最新でない可能性があります。";
+  } else {
+    warnEl.style.display = "none";
+  }
+}
+updateHeaderClock();
+setInterval(updateHeaderClock, 1000);
 
 /* =========================================================
    Service Worker 登録(オフライン表示とホーム画面アプリ化のため)
